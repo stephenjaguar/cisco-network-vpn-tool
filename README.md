@@ -71,13 +71,15 @@ http://127.0.0.1:5000
 
 Use `Mock Cisco IOS Driver` for the normal demo. Use `Netmiko Cisco IOS SSH` only when you have a reachable Cisco IOS device or lab image.
 
-The VLAN rows are editable. The default rows satisfy the assignment:
+The VLAN rows are editable, but compliance validation is fixed to the assignment policy. The final switch state must contain:
 
 | VLAN ID | Name |
 | --- | --- |
 | `10` | `VLAN_DATA` |
 | `20` | `VLAN_VOICE` |
 | `50` | `VLAN_SECURITY` |
+
+If the submitted VLAN IDs or names do not match this policy, the app displays `NON_COMPLIANT` and shows the mismatch alert.
 
 ## Optional Real Device Mode
 

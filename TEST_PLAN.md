@@ -70,7 +70,7 @@ pytest -v
 Expected result:
 
 ```text
-11 passed
+12 passed
 ```
 
 The automated tests verify:
@@ -78,6 +78,7 @@ The automated tests verify:
 - `MockSwitchDriver` applies hostname changes.
 - `MockSwitchDriver` applies VLAN 10, 20, and 50.
 - Flask workflow accepts custom VLAN IDs and names from the GUI.
+- Flask workflow reports `NON_COMPLIANT` if submitted VLANs do not match the required assignment policy.
 - Flask workflow rejects non-numeric VLAN IDs.
 - Flask workflow rejects duplicate VLAN IDs.
 - Optional VPN connectivity helper builds the correct platform-specific ping command.
@@ -131,15 +132,15 @@ Expected page result:
 
 Custom VLAN input test:
 
-- Change row 1 to `100` and `USERS`.
-- Change row 2 to `200` and `VOICE`.
-- Change row 3 to `300` and `CAMERAS`.
+- Change row 1 to `10` and `USERS`.
+- Keep row 2 as `20` and `VLAN_VOICE`.
+- Keep row 3 as `50` and `VLAN_SECURITY`.
 - Submit again.
 
 Expected page result:
 
-- Compliance status is `COMPLIANT`.
-- VLAN 100, VLAN 200, and VLAN 300 checks are `PASS`.
+- Compliance status is `NON_COMPLIANT`.
+- An alert explains that VLAN 10 expected `VLAN_DATA` but observed `USERS`.
 
 Verify backup file:
 

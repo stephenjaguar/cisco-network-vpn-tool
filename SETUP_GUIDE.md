@@ -83,7 +83,9 @@ Expected:
 - VLAN 10, VLAN 20, and VLAN 50 checks are `PASS`.
 - A backup path is shown.
 
-You can also edit the VLAN rows before submitting. For example, enter `100 USERS`, `200 VOICE`, and `300 CAMERAS`; the app will configure and validate those submitted VLANs instead of the defaults.
+You can also edit the VLAN rows before submitting. The app will apply the submitted VLANs, then validate the resulting switch state against the required assignment VLAN policy.
+
+Compliance is intentionally checked against the assignment VLAN policy. If VLAN 10 is not named `VLAN_DATA`, VLAN 20 is not named `VLAN_VOICE`, or VLAN 50 is not named `VLAN_SECURITY`, the result should be `NON_COMPLIANT`.
 
 ## 6. Verify Backup File
 
@@ -129,7 +131,7 @@ pytest -v
 Expected:
 
 ```text
-11 passed
+12 passed
 ```
 
 ## 8. Open the Interview Explanation Page

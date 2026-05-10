@@ -54,7 +54,7 @@ def automate_switch():
             show_vlan_output=driver.show_vlan_brief(),
             hostname_output=driver.show_hostname(),
             intended_hostname=hostname,
-            intended_vlans=vlans,
+            intended_vlans=DEFAULT_VLANS,
         )
         result["report"] = report
     except Exception as exc:  # noqa: BLE001 - visible interview demo error reporting
