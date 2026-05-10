@@ -23,6 +23,20 @@ https://github.com/stephenjaguar/cisco-network-vpn-tool
 - Mock driver default for reliable demos and tests.
 - Optional Netmiko driver for real Cisco IOS devices.
 
+## Part 2: IPSec VPN Planning Deliverables
+
+The FortiGate-to-Palo Alto IPSec VPN planning requirement is covered by these files:
+
+| Requirement Area | File |
+| --- | --- |
+| VPN automation plan | `VPN_PLAN.md` |
+| Part 2 review index | `PART2_VPN_DELIVERABLES.md` |
+| FortiGate conceptual config | `examples/fortigate_ipsec_cli.conf` |
+| Palo Alto conceptual config | `examples/paloalto_ipsec_set_commands.txt` |
+| Optional tunnel connectivity helper | `scripts/vpn_connectivity_check.py` |
+
+`PART2_VPN_DELIVERABLES.md` maps each Part 2 evaluation criterion to the exact repository artifact.
+
 ## Cisco Mocking Approach
 
 The default mode uses `MockSwitchDriver`, an in-process Python mock of a Cisco IOS switch. It does not start a virtual machine or external network emulator. The mock stores hostname and VLAN state, returns Cisco-like `show vlan brief` and hostname output, and generates a running config for backup testing.
@@ -120,6 +134,7 @@ Generated backups are ignored by Git because they may contain device-specific co
 | Validate config and alert on drift | `validate_switch_state()` and frontend compliance report |
 | Packet Tracer/GNS3 simulation path | `simulation/` and `PACKET_TRACER_SETUP.md` document Packet Tracer SSH testing |
 | VPN automation planning | `VPN_PLAN.md` |
+| Part 2 VPN deliverables index | `PART2_VPN_DELIVERABLES.md` |
 | Optional VPN examples | `examples/fortigate_ipsec_cli.conf`, `examples/paloalto_ipsec_set_commands.txt` |
 | Optional tunnel test helper | `scripts/vpn_connectivity_check.py` |
 | Test plan | `TEST_PLAN.md` |

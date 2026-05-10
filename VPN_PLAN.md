@@ -1,5 +1,7 @@
 # FortiGate to Palo Alto IPSec VPN Automation Plan
 
+For a requirement-by-requirement review index, see `PART2_VPN_DELIVERABLES.md`.
+
 ## Overview
 
 This document describes how to automate an IPSec VPN between a FortiGate firewall and a Palo Alto firewall. The plan focuses on repeatable configuration flow, API touchpoints, and multi-vendor interoperability checks.

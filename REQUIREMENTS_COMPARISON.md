@@ -28,6 +28,7 @@ This document maps the Spanish assignment to the current repository implementati
 | Requirement | Status | Repository Evidence |
 | --- | --- | --- |
 | Markdown VPN automation plan | Complete | `VPN_PLAN.md` |
+| Review index for Part 2 | Complete | `PART2_VPN_DELIVERABLES.md` |
 | WAN IP parameters | Complete | `VPN_PLAN.md` sample topology |
 | Example local networks | Complete | `10.10.10.0/24` and `10.20.20.0/24` |
 | Tunnel network `169.255.1.0/30` | Complete | `VPN_PLAN.md` |
