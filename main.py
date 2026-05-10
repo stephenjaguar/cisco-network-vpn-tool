@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from flask import Flask, render_template, request
+from pathlib import Path
+
+from flask import Flask, abort, render_template, request, send_file, url_for
+from werkzeug.utils import secure_filename
 
 from driver import DEFAULT_HOSTNAME, DEFAULT_VLANS, create_driver
 from validator import validate_switch_state
@@ -49,6 +52,7 @@ def automate_switch():
         result["commands"].append(driver.save_config())
         backup_path = driver.backup_config(hostname)
         result["backup_path"] = str(backup_path)
+        result["backup_url"] = url_for("download_backup", filename=backup_path.name)
 
         report = validate_switch_state(
             show_vlan_output=driver.show_vlan_brief(),
@@ -66,6 +70,19 @@ def automate_switch():
         default_hostname=hostname,
         result=result,
     )
+
+
+@app.get("/backups/<path:filename>")
+def download_backup(filename: str):
+    safe_filename = secure_filename(filename)
+    if safe_filename != filename or not safe_filename.endswith(".cfg"):
+        abort(404)
+
+    backup_path = Path.cwd() / "backups" / safe_filename
+    if not backup_path.is_file():
+        abort(404)
+
+    return send_file(backup_path, mimetype="text/plain")
 
 
 def parse_vlan_form(form) -> dict[int, str]:

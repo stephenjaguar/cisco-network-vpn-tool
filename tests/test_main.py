@@ -48,9 +48,22 @@ def test_flask_mock_workflow_returns_compliant_report_and_backup(monkeypatch, tm
     assert "VLAN 20" in body
     assert "VLAN 50" in body
     assert len(backups) == 1
+    assert f'href="/backups/{backups[0].name}"' in body
     backup_text = backups[0].read_text(encoding="utf-8")
     assert f"hostname {DEFAULT_HOSTNAME}" in backup_text
     assert "vlan 10" in backup_text
+
+    backup_response = client.get(f"/backups/{backups[0].name}")
+    assert backup_response.status_code == 200
+    assert f"hostname {DEFAULT_HOSTNAME}" in backup_response.get_data(as_text=True)
+
+
+def test_backup_route_rejects_path_traversal():
+    client = app.test_client()
+
+    response = client.get("/backups/../README.md")
+
+    assert response.status_code == 404
 
 
 def test_flask_reports_non_compliant_when_vlan_policy_does_not_match(monkeypatch, tmp_path):

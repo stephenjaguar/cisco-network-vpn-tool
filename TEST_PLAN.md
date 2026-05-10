@@ -70,7 +70,7 @@ pytest -v
 Expected result:
 
 ```text
-12 passed
+13 passed
 ```
 
 The automated tests verify:
@@ -123,7 +123,7 @@ Submit the form with:
 Expected page result:
 
 - Automation command output is displayed.
-- Backup file path is displayed.
+- Backup file path is displayed as a clickable link.
 - Compliance status is `COMPLIANT`.
 - Hostname check is `PASS`.
 - VLAN 10 check is `PASS`.

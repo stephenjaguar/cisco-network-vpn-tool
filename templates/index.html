@@ -174,7 +174,12 @@
           <li><pre>{{ line }}</pre></li>
           {% endfor %}
         </ol>
-        <p>Backup file: <code>{{ result.backup_path }}</code></p>
+        <p>
+          Backup file:
+          <a href="{{ result.backup_url }}" target="_blank" rel="noopener">
+            <code>{{ result.backup_path }}</code>
+          </a>
+        </p>
 
         {% set report = result.report %}
         <p>

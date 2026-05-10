@@ -131,7 +131,7 @@ pytest -v
 Expected:
 
 ```text
-12 passed
+13 passed
 ```
 
 ## 8. Open the Interview Explanation Page

@@ -50,5 +50,5 @@ pytest -v
 Expected result:
 
 ```text
-12 passed
+13 passed
 ```
