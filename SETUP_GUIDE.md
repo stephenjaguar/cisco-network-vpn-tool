@@ -146,7 +146,7 @@ It explains the thinking behind the design, why mock mode was used, how validati
 
 Only use real device mode on a lab switch or a switch where you have permission to make changes.
 
-For the assignment's Packet Tracer simulation path, follow `PACKET_TRACER_SETUP.md`. The same Netmiko mode is used whether the SSH target is a Packet Tracer switch or a physical Cisco switch.
+For the assignment's Packet Tracer simulation path, follow `simulation/README.md` and `PACKET_TRACER_SETUP.md`. The same Netmiko mode is used whether the SSH target is a Packet Tracer switch or a physical Cisco switch.
 
 On the Cisco switch, SSH must be enabled. Example Cisco IOS preparation:
 

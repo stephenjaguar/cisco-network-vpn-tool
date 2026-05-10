@@ -18,7 +18,7 @@ This test plan verifies:
 
 Real Cisco SSH testing through Netmiko is out of scope unless a lab switch, Cisco CML image, DevNet sandbox, or Containerlab Cisco IOL image is available.
 
-For this assignment, Packet Tracer can be used as the Cisco simulation path. See `PACKET_TRACER_SETUP.md` for the device preparation and frontend values.
+For this assignment, Packet Tracer can be used as the Cisco simulation path. See `simulation/README.md` and `PACKET_TRACER_SETUP.md` for the device preparation and frontend values.
 
 ## Environment
 
@@ -204,7 +204,7 @@ The project is considered working when:
 - Submitting the default or custom mock form returns `COMPLIANT`.
 - A backup config file is generated under `backups/`.
 - `README.md`, `VPN_PLAN.md`, and `TEST_PLAN.md` are present and complete.
-- `PACKET_TRACER_SETUP.md` documents how to run the same workflow against a simulated Cisco switch.
+- `simulation/` and `PACKET_TRACER_SETUP.md` document how to run the same workflow against a simulated Cisco switch.
 
 ## Known Limitations
 
