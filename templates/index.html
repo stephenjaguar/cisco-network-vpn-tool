@@ -137,22 +137,33 @@
           <label for="hostname">Hostname</label>
           <input id="hostname" name="hostname" value="{{ default_hostname }}" required>
 
+          <h2 style="margin-top: 22px;">VLAN Configuration</h2>
+          <table>
+            <thead>
+              <tr><th>VLAN ID</th><th>Name</th></tr>
+            </thead>
+            <tbody>
+              {% for vlan_id, vlan_name in vlans.items() %}
+              <tr>
+                <td>
+                  <input
+                    name="vlan_id_{{ loop.index }}"
+                    value="{{ vlan_id }}"
+                    inputmode="numeric"
+                    pattern="[0-9]+"
+                    required
+                  >
+                </td>
+                <td>
+                  <input name="vlan_name_{{ loop.index }}" value="{{ vlan_name }}" required>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
           <button type="submit">Run Automation</button>
         </form>
-      </section>
-
-      <section>
-        <h2>Intended VLANs</h2>
-        <table>
-          <thead>
-            <tr><th>VLAN ID</th><th>Name</th></tr>
-          </thead>
-          <tbody>
-            {% for vlan_id, vlan_name in vlans.items() %}
-            <tr><td>{{ vlan_id }}</td><td>{{ vlan_name }}</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
       </section>
     </div>
 

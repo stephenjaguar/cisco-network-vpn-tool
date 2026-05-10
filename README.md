@@ -2,14 +2,21 @@
 
 This project is an interview-ready Python automation tool for Cisco IOS switch configuration and validation. It uses Flask for the frontend, Netmiko for real SSH support, and a built-in mock Cisco driver for local testing without GNS3, EVE-NG, VMware, or VirtualBox.
 
+Repository URL:
+
+```text
+https://github.com/stephenjaguar/cisco-network-vpn-tool
+```
+
 ## Features
 
-- Browser UI for device IP, username, password, and hostname.
-- Standard VLAN intent:
+- Browser UI for device IP, username, password, hostname, and editable VLAN rows.
+- Default VLAN intent:
   - VLAN 10: `VLAN_DATA`
   - VLAN 20: `VLAN_VOICE`
   - VLAN 50: `VLAN_SECURITY`
 - Hostname configuration with default `AUTOMATED_SWITCH`.
+- VLAN ID/name input with validation for numeric IDs, valid VLAN range, required names, and duplicate IDs.
 - Save configuration with `write memory`.
 - Backup running config to `backups/[hostname]_[timestamp].cfg`.
 - Compliance validation from Cisco-like command output.
@@ -21,6 +28,8 @@ This project is an interview-ready Python automation tool for Cisco IOS switch c
 The default mode uses `MockSwitchDriver`, an in-process Python mock of a Cisco IOS switch. It does not start a virtual machine or external network emulator. The mock stores hostname and VLAN state, returns Cisco-like `show vlan brief` and hostname output, and generates a running config for backup testing.
 
 This keeps the interview demo deterministic while preserving a clean driver interface for real Netmiko-based devices later.
+
+For the assignment simulation requirement, see `PACKET_TRACER_SETUP.md`. Packet Tracer can provide a Cisco switch with SSH enabled, and the Flask app can connect to that switch through the `Netmiko Cisco IOS SSH` driver.
 
 ## Setup
 
@@ -60,6 +69,14 @@ http://127.0.0.1:5000
 
 Use `Mock Cisco IOS Driver` for the normal demo. Use `Netmiko Cisco IOS SSH` only when you have a reachable Cisco IOS device or lab image.
 
+The VLAN rows are editable. The default rows satisfy the assignment:
+
+| VLAN ID | Name |
+| --- | --- |
+| `10` | `VLAN_DATA` |
+| `20` | `VLAN_VOICE` |
+| `50` | `VLAN_SECURITY` |
+
 ## Optional Real Device Mode
 
 Netmiko mode expects a Cisco IOS SSH target and uses:
@@ -73,3 +90,30 @@ Netmiko mode expects a Cisco IOS SSH target and uses:
 - `show run | i ^hostname`
 
 Do not use real device mode against production equipment without change approval.
+
+## Backup Location
+
+Every successful run writes a running-config backup here:
+
+```text
+backups/[hostname]_[YYYYMMDD_HHMMSS].cfg
+```
+
+Generated backups are ignored by Git because they may contain device-specific configuration. The README and `TEST_PLAN.md` describe how to verify that the backup exists and contains the configured hostname and VLANs.
+
+## Assignment Requirements Mapping
+
+| Requirement | Implementation |
+| --- | --- |
+| Git repository and README | This repo plus this README |
+| Python automation script | `main.py`, `driver.py`, `validator.py` |
+| Frontend for VLAN and hostname input | Flask UI in `templates/index.html` |
+| VLAN 10/20/50 support | Default editable VLAN rows |
+| Apply VLAN config to Cisco switch | `NetmikoSwitchDriver.push_vlan_config()` |
+| Change hostname | `push_hostname()` through mock or Netmiko driver |
+| Save to NVRAM | `save_config()` runs `write memory` |
+| Backup config | `backup_config()` writes timestamped local files |
+| Validate config and alert on drift | `validate_switch_state()` and frontend compliance report |
+| Packet Tracer/GNS3 simulation path | `PACKET_TRACER_SETUP.md` documents Packet Tracer SSH testing |
+| VPN automation planning | `VPN_PLAN.md` |
+| Test plan | `TEST_PLAN.md` |

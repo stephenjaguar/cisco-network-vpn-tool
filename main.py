@@ -41,10 +41,11 @@ def automate_switch():
     }
 
     try:
+        vlans = parse_vlan_form(request.form)
         driver = create_driver(driver_mode, device_ip, username, password)
         result["commands"].append(driver.connect())
         result["commands"].append(driver.push_hostname(hostname))
-        result["commands"].append(driver.push_vlan_config(DEFAULT_VLANS))
+        result["commands"].append(driver.push_vlan_config(vlans))
         result["commands"].append(driver.save_config())
         backup_path = driver.backup_config(hostname)
         result["backup_path"] = str(backup_path)
@@ -53,7 +54,7 @@ def automate_switch():
             show_vlan_output=driver.show_vlan_brief(),
             hostname_output=driver.show_hostname(),
             intended_hostname=hostname,
-            intended_vlans=DEFAULT_VLANS,
+            intended_vlans=vlans,
         )
         result["report"] = report
     except Exception as exc:  # noqa: BLE001 - visible interview demo error reporting
@@ -61,10 +62,45 @@ def automate_switch():
 
     return render_template(
         "index.html",
-        vlans=DEFAULT_VLANS,
+        vlans=_submitted_vlan_values(request.form),
         default_hostname=hostname,
         result=result,
     )
+
+
+def parse_vlan_form(form) -> dict[int, str]:
+    """Parse three editable VLAN rows from the Flask form."""
+    vlans: dict[int, str] = {}
+
+    for index in range(1, 4):
+        vlan_id_raw = form.get(f"vlan_id_{index}", "").strip()
+        vlan_name = form.get(f"vlan_name_{index}", "").strip()
+
+        if not vlan_id_raw:
+            raise ValueError(f"VLAN row {index}: VLAN ID is required")
+        if not vlan_id_raw.isdigit():
+            raise ValueError(f"VLAN row {index}: VLAN ID must be numeric")
+
+        vlan_id = int(vlan_id_raw)
+        if vlan_id < 1 or vlan_id > 4094:
+            raise ValueError(f"VLAN row {index}: VLAN ID must be between 1 and 4094")
+        if not vlan_name:
+            raise ValueError(f"VLAN row {index}: VLAN name is required")
+        if vlan_id in vlans:
+            raise ValueError(f"Duplicate VLAN ID submitted: {vlan_id}")
+
+        vlans[vlan_id] = vlan_name
+
+    return vlans
+
+
+def _submitted_vlan_values(form) -> dict[int | str, str]:
+    values: dict[int | str, str] = {}
+    for index, (default_id, default_name) in enumerate(DEFAULT_VLANS.items(), start=1):
+        vlan_id_raw = form.get(f"vlan_id_{index}", str(default_id)).strip()
+        vlan_name = form.get(f"vlan_name_{index}", default_name).strip()
+        values[vlan_id_raw or default_id] = vlan_name or default_name
+    return values
 
 
 if __name__ == "__main__":
