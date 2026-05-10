@@ -147,7 +147,7 @@
 
     <section>
       <h2>Why Mock the Cisco Switch?</h2>
-      <p>The task constraints avoid VMware and VirtualBox. GNS3 and EVE-NG commonly depend on VM-based appliances, and Cisco IOL images require licensing. A mock driver removes those blockers while still proving the application logic.</p>
+      <p>The task constraints avoid VMware and VirtualBox. Mock mode provides deterministic local validation, while Packet Tracer or a physical switch can be used with Netmiko mode for Cisco SSH testing.</p>
       <p>The mock is not a fake test shortcut. It emulates the command outputs the validator depends on, including <code>show vlan brief</code>, <code>show run | i hostname</code>, and a running config backup.</p>
     </section>
 
@@ -156,7 +156,7 @@
       <ol>
         <li>The Flask UI collects device IP, username, password, driver mode, and hostname.</li>
         <li>The app creates either <code>MockSwitchDriver</code> or <code>NetmikoSwitchDriver</code>.</li>
-        <li>The driver applies hostname and VLAN intent.</li>
+        <li>The driver applies hostname and submitted VLAN intent.</li>
         <li>The driver saves configuration with <code>write memory</code>.</li>
         <li>The driver writes a local backup file under <code>backups/</code>.</li>
         <li>The validator checks command output against intended state.</li>
@@ -168,7 +168,8 @@
   -> create_driver("mock" or "netmiko")
   -> connect()
   -> push_hostname("AUTOMATED_SWITCH")
-  -> push_vlan_config({10, 20, 50})
+      -> parse editable VLAN rows
+  -> push_vlan_config(submitted VLANs)
   -> save_config()
   -> backup_config()
   -> validate_switch_state()
@@ -176,7 +177,8 @@
     </section>
 
     <section>
-      <h2>Default VLAN Intent</h2>
+      <h2>Editable VLAN Intent</h2>
+      <p>The UI defaults to the interview VLANs, but the operator can edit VLAN IDs and names before running automation.</p>
       <table>
         <thead>
           <tr><th>VLAN</th><th>Name</th><th>Purpose</th></tr>

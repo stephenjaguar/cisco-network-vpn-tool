@@ -18,6 +18,8 @@ This test plan verifies:
 
 Real Cisco SSH testing through Netmiko is out of scope unless a lab switch, Cisco CML image, DevNet sandbox, or Containerlab Cisco IOL image is available.
 
+For this assignment, Packet Tracer can be used as the Cisco simulation path. See `PACKET_TRACER_SETUP.md` for the device preparation and frontend values.
+
 ## Environment
 
 - macOS on Apple Silicon or Intel.
@@ -68,13 +70,16 @@ pytest -v
 Expected result:
 
 ```text
-7 passed
+9 passed
 ```
 
 The automated tests verify:
 
 - `MockSwitchDriver` applies hostname changes.
 - `MockSwitchDriver` applies VLAN 10, 20, and 50.
+- Flask workflow accepts custom VLAN IDs and names from the GUI.
+- Flask workflow rejects non-numeric VLAN IDs.
+- Flask workflow rejects duplicate VLAN IDs.
 - `MockSwitchDriver` returns Cisco-like `show vlan brief` output.
 - `MockSwitchDriver` writes a local backup config.
 - Validator returns `COMPLIANT` when intended state matches observed output.
@@ -109,6 +114,9 @@ Submit the form with:
 | Username | `admin` |
 | Password | `admin` |
 | Hostname | `AUTOMATED_SWITCH` |
+| VLAN row 1 | `10`, `VLAN_DATA` |
+| VLAN row 2 | `20`, `VLAN_VOICE` |
+| VLAN row 3 | `50`, `VLAN_SECURITY` |
 
 Expected page result:
 
@@ -119,6 +127,18 @@ Expected page result:
 - VLAN 10 check is `PASS`.
 - VLAN 20 check is `PASS`.
 - VLAN 50 check is `PASS`.
+
+Custom VLAN input test:
+
+- Change row 1 to `100` and `USERS`.
+- Change row 2 to `200` and `VOICE`.
+- Change row 3 to `300` and `CAMERAS`.
+- Submit again.
+
+Expected page result:
+
+- Compliance status is `COMPLIANT`.
+- VLAN 100, VLAN 200, and VLAN 300 checks are `PASS`.
 
 Verify backup file:
 
@@ -180,9 +200,10 @@ The project is considered working when:
 
 - `pytest -v` returns all tests passing.
 - The Flask app loads at `http://127.0.0.1:5000`.
-- Submitting the default mock form returns `COMPLIANT`.
+- Submitting the default or custom mock form returns `COMPLIANT`.
 - A backup config file is generated under `backups/`.
 - `README.md`, `VPN_PLAN.md`, and `TEST_PLAN.md` are present and complete.
+- `PACKET_TRACER_SETUP.md` documents how to run the same workflow against a simulated Cisco switch.
 
 ## Known Limitations
 

@@ -70,6 +70,9 @@ Use these form values:
 | Username | `admin` |
 | Password | `admin` |
 | Hostname | `AUTOMATED_SWITCH` |
+| VLAN row 1 | `10`, `VLAN_DATA` |
+| VLAN row 2 | `20`, `VLAN_VOICE` |
+| VLAN row 3 | `50`, `VLAN_SECURITY` |
 
 Click `Run Automation`.
 
@@ -79,6 +82,8 @@ Expected:
 - Hostname check is `PASS`.
 - VLAN 10, VLAN 20, and VLAN 50 checks are `PASS`.
 - A backup path is shown.
+
+You can also edit the VLAN rows before submitting. For example, enter `100 USERS`, `200 VOICE`, and `300 CAMERAS`; the app will configure and validate those submitted VLANs instead of the defaults.
 
 ## 6. Verify Backup File
 
@@ -124,7 +129,7 @@ pytest -v
 Expected:
 
 ```text
-7 passed
+9 passed
 ```
 
 ## 8. Open the Interview Explanation Page
@@ -140,6 +145,8 @@ It explains the thinking behind the design, why mock mode was used, how validati
 ## 9. Real Cisco Switch Connection Checklist
 
 Only use real device mode on a lab switch or a switch where you have permission to make changes.
+
+For the assignment's Packet Tracer simulation path, follow `PACKET_TRACER_SETUP.md`. The same Netmiko mode is used whether the SSH target is a Packet Tracer switch or a physical Cisco switch.
 
 On the Cisco switch, SSH must be enabled. Example Cisco IOS preparation:
 
