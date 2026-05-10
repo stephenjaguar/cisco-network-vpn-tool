@@ -20,7 +20,7 @@ This document maps the Spanish assignment to the current repository implementati
 | Validate VLAN and hostname config | Complete | `validate_switch_state()` checks the required VLAN policy: 10/20/50 with `VLAN_DATA`, `VLAN_VOICE`, `VLAN_SECURITY` |
 | Display alerts for drift | Complete | Frontend displays validation alerts and input validation errors |
 | Regular meaningful Git commits | Complete | Current history includes feature and documentation commits |
-| Packet Tracer or GNS3 simulation path | Complete as documentation | `simulation/` and `PACKET_TRACER_SETUP.md` document Packet Tracer SSH flow |
+| Packet Tracer or GNS3 simulation path | Complete as documentation | `simulation/PACKET_TRACER_GNS3_TESTING.md`, `simulation/`, and `PACKET_TRACER_SETUP.md` document Packet Tracer and GNS3 SSH flow |
 | Frontend/switch evidence screenshots | Intentionally not included | User requested focus on main requirements and ignore image files |
 
 ## Part 2: FortiGate to Palo Alto IPSec VPN Automation Plan

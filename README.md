@@ -43,7 +43,7 @@ The default mode uses `MockSwitchDriver`, an in-process Python mock of a Cisco I
 
 This keeps the interview demo deterministic while preserving a clean driver interface for real Netmiko-based devices later.
 
-For the assignment simulation requirement, see `simulation/README.md` and `PACKET_TRACER_SETUP.md`. Packet Tracer can provide a Cisco switch with SSH enabled, and the Flask app can connect to that switch through the `Netmiko Cisco IOS SSH` driver.
+For the assignment simulation requirement, see `simulation/PACKET_TRACER_GNS3_TESTING.md`, `simulation/README.md`, and `PACKET_TRACER_SETUP.md`. Packet Tracer or GNS3 can provide a Cisco switch with SSH enabled, and the Flask app can connect to that switch through the `Netmiko Cisco IOS SSH` driver.
 
 ## Setup
 
@@ -132,7 +132,7 @@ Generated backups are ignored by Git because they may contain device-specific co
 | Save to NVRAM | `save_config()` runs `write memory` |
 | Backup config | `backup_config()` writes timestamped local files |
 | Validate config and alert on drift | `validate_switch_state()` and frontend compliance report |
-| Packet Tracer/GNS3 simulation path | `simulation/` and `PACKET_TRACER_SETUP.md` document Packet Tracer SSH testing |
+| Packet Tracer/GNS3 simulation path | `simulation/PACKET_TRACER_GNS3_TESTING.md`, `simulation/`, and `PACKET_TRACER_SETUP.md` |
 | VPN automation planning | `VPN_PLAN.md` |
 | Part 2 VPN deliverables index | `PART2_VPN_DELIVERABLES.md` |
 | Optional VPN examples | `examples/fortigate_ipsec_cli.conf`, `examples/paloalto_ipsec_set_commands.txt` |

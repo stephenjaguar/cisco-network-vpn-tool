@@ -6,6 +6,7 @@ The assignment expects Cisco switch simulation with Packet Tracer or GNS3. This 
 
 ## Included Files
 
+- `PACKET_TRACER_GNS3_TESTING.md`: full Part 1 simulation test guide for Packet Tracer and GNS3.
 - `packet_tracer_topology.md`: topology, addressing, and Packet Tracer build steps.
 - `switch_initial_setup.txt`: Cisco IOS commands to prepare the simulated switch for SSH.
 - `frontend_netmiko_test_steps.md`: exact Flask frontend values for connecting to the simulated switch.
