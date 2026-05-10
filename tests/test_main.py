@@ -103,3 +103,4 @@ def test_flask_rejects_duplicate_vlan_id():
 
     assert response.status_code == 200
     assert "Duplicate VLAN ID submitted: 10" in body
+    assert body.count('value="10"') == 2

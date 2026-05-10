@@ -15,7 +15,7 @@ app = Flask(__name__)
 def index():
     return render_template(
         "index.html",
-        vlans=DEFAULT_VLANS,
+        vlan_rows=_default_vlan_rows(),
         default_hostname=DEFAULT_HOSTNAME,
         result=None,
     )
@@ -62,7 +62,7 @@ def automate_switch():
 
     return render_template(
         "index.html",
-        vlans=_submitted_vlan_values(request.form),
+        vlan_rows=_submitted_vlan_rows(request.form),
         default_hostname=hostname,
         result=result,
     )
@@ -94,13 +94,22 @@ def parse_vlan_form(form) -> dict[int, str]:
     return vlans
 
 
-def _submitted_vlan_values(form) -> dict[int | str, str]:
-    values: dict[int | str, str] = {}
+def _default_vlan_rows() -> list[dict[str, str]]:
+    return [
+        {"id": str(vlan_id), "name": vlan_name}
+        for vlan_id, vlan_name in DEFAULT_VLANS.items()
+    ]
+
+
+def _submitted_vlan_rows(form) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
     for index, (default_id, default_name) in enumerate(DEFAULT_VLANS.items(), start=1):
         vlan_id_raw = form.get(f"vlan_id_{index}", str(default_id)).strip()
         vlan_name = form.get(f"vlan_name_{index}", default_name).strip()
-        values[vlan_id_raw or default_id] = vlan_name or default_name
-    return values
+        rows.append(
+            {"id": vlan_id_raw or str(default_id), "name": vlan_name or default_name}
+        )
+    return rows
 
 
 if __name__ == "__main__":

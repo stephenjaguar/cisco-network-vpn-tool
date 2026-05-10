@@ -1,4 +1,4 @@
-# Candidate Lab - Networking Mercado Libre
+# Candidate Lab - Networking Automation Challenge
 
 ## Automation Challenge
 

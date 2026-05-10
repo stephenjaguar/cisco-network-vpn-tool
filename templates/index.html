@@ -31,12 +31,7 @@
     h1 { margin: 0 0 8px; font-size: 28px; }
     h2 { margin: 0 0 16px; font-size: 18px; }
     p { color: var(--muted); margin: 0 0 24px; }
-    .layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      align-items: start;
-    }
+    .layout { display: grid; gap: 20px; align-items: start; }
     section {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -143,19 +138,19 @@
               <tr><th>VLAN ID</th><th>Name</th></tr>
             </thead>
             <tbody>
-              {% for vlan_id, vlan_name in vlans.items() %}
+              {% for row in vlan_rows %}
               <tr>
                 <td>
                   <input
                     name="vlan_id_{{ loop.index }}"
-                    value="{{ vlan_id }}"
+                    value="{{ row.id }}"
                     inputmode="numeric"
                     pattern="[0-9]+"
                     required
                   >
                 </td>
                 <td>
-                  <input name="vlan_name_{{ loop.index }}" value="{{ vlan_name }}" required>
+                  <input name="vlan_name_{{ loop.index }}" value="{{ row.name }}" required>
                 </td>
               </tr>
               {% endfor %}
