@@ -215,3 +215,13 @@ Alerts should include the expected value, observed value, device name, and remed
 ```text
 PROXY_ID_MISMATCH on PA-DC: expected local 10.20.20.0/24 remote 10.10.10.0/24, observed local 10.10.10.0/24 remote 10.20.20.0/24.
 ```
+
+## Optional Repository Artifacts
+
+The repository includes conceptual examples that align with this plan:
+
+- `examples/fortigate_ipsec_cli.conf`
+- `examples/paloalto_ipsec_set_commands.txt`
+- `scripts/vpn_connectivity_check.py`
+
+These are intentionally review-oriented examples. They should be adapted and tested in a lab before use on real firewalls.
