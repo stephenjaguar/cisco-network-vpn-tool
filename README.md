@@ -41,6 +41,8 @@ chmod +x setup_all.sh
 
 For detailed setup, test, and real Cisco switch instructions, see `SETUP_GUIDE.md`.
 
+The English translation of the Spanish assignment is saved in `ASSIGNMENT_TRANSLATION.md`, and the requirement-by-requirement comparison is saved in `REQUIREMENTS_COMPARISON.md`.
+
 ## Run Tests
 
 ```bash
@@ -116,4 +118,6 @@ Generated backups are ignored by Git because they may contain device-specific co
 | Validate config and alert on drift | `validate_switch_state()` and frontend compliance report |
 | Packet Tracer/GNS3 simulation path | `PACKET_TRACER_SETUP.md` documents Packet Tracer SSH testing |
 | VPN automation planning | `VPN_PLAN.md` |
+| Optional VPN examples | `examples/fortigate_ipsec_cli.conf`, `examples/paloalto_ipsec_set_commands.txt` |
+| Optional tunnel test helper | `scripts/vpn_connectivity_check.py` |
 | Test plan | `TEST_PLAN.md` |

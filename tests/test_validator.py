@@ -13,9 +13,9 @@ def test_validator_reports_compliant_state():
 VLAN Name                             Status    Ports
 ---- -------------------------------- --------- -------------------------------
 1    default                          active    Gi0/1
-10   VLAN_DATA                        active
-20   VLAN_VOICE                       active
-50   VLAN_SECURITY                    active
+10   VLAN_DATA                       active
+20   VLAN_VOICE                         active
+50   VLAN_SECURITY                   active
 """
     report = validate_switch_state(
         vlan_output, "hostname AUTOMATED_SWITCH", "AUTOMATED_SWITCH", INTENDED_VLANS
@@ -29,8 +29,8 @@ def test_validator_detects_missing_vlan():
     vlan_output = """
 VLAN Name                             Status    Ports
 ---- -------------------------------- --------- -------------------------------
-10   VLAN_DATA                        active
-20   VLAN_VOICE                       active
+10   VLAN_DATA                       active
+20   VLAN_VOICE                         active
 """
     report = validate_switch_state(
         vlan_output, "hostname AUTOMATED_SWITCH", "AUTOMATED_SWITCH", INTENDED_VLANS
@@ -42,9 +42,9 @@ VLAN Name                             Status    Ports
 
 def test_validator_detects_wrong_vlan_name():
     vlan_output = """
-10   VLAN_DATA                        active
+10   VLAN_DATA                       active
 20   WRONG_NAME                       active
-50   VLAN_SECURITY                    active
+50   VLAN_SECURITY                   active
 """
     report = validate_switch_state(
         vlan_output, "hostname AUTOMATED_SWITCH", "AUTOMATED_SWITCH", INTENDED_VLANS
@@ -56,9 +56,9 @@ def test_validator_detects_wrong_vlan_name():
 
 def test_validator_detects_hostname_mismatch():
     vlan_output = """
-10   VLAN_DATA                        active
-20   VLAN_VOICE                       active
-50   VLAN_SECURITY                    active
+10   VLAN_DATA                       active
+20   VLAN_VOICE                         active
+50   VLAN_SECURITY                   active
 """
     report = validate_switch_state(
         vlan_output, "hostname OLD_SWITCH", "AUTOMATED_SWITCH", INTENDED_VLANS

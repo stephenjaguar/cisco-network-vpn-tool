@@ -70,7 +70,7 @@ pytest -v
 Expected result:
 
 ```text
-9 passed
+11 passed
 ```
 
 The automated tests verify:
@@ -80,6 +80,7 @@ The automated tests verify:
 - Flask workflow accepts custom VLAN IDs and names from the GUI.
 - Flask workflow rejects non-numeric VLAN IDs.
 - Flask workflow rejects duplicate VLAN IDs.
+- Optional VPN connectivity helper builds the correct platform-specific ping command.
 - `MockSwitchDriver` returns Cisco-like `show vlan brief` output.
 - `MockSwitchDriver` writes a local backup config.
 - Validator returns `COMPLIANT` when intended state matches observed output.

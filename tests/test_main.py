@@ -1,6 +1,20 @@
 from pathlib import Path
 
+from driver import DEFAULT_HOSTNAME
 from main import app
+
+
+def test_index_renders_translated_assignment_defaults():
+    client = app.test_client()
+
+    response = client.get("/")
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert DEFAULT_HOSTNAME in body
+    assert "VLAN_DATA" in body
+    assert "VLAN_VOICE" in body
+    assert "VLAN_SECURITY" in body
 
 
 def test_flask_mock_workflow_returns_compliant_report_and_backup(monkeypatch, tmp_path):
@@ -14,7 +28,7 @@ def test_flask_mock_workflow_returns_compliant_report_and_backup(monkeypatch, tm
             "device_ip": "192.0.2.10",
             "username": "admin",
             "password": "admin",
-            "hostname": "AUTOMATED_SWITCH",
+            "hostname": DEFAULT_HOSTNAME,
             "vlan_id_1": "100",
             "vlan_name_1": "USERS",
             "vlan_id_2": "200",
@@ -25,17 +39,17 @@ def test_flask_mock_workflow_returns_compliant_report_and_backup(monkeypatch, tm
     )
 
     body = response.get_data(as_text=True)
-    backups = list((tmp_path / "backups").glob("AUTOMATED_SWITCH_*.cfg"))
+    backups = list((tmp_path / "backups").glob(f"{DEFAULT_HOSTNAME}_*.cfg"))
 
     assert response.status_code == 200
     assert "COMPLIANT" in body
-    assert "Hostname set to AUTOMATED_SWITCH" in body
+    assert f"Hostname set to {DEFAULT_HOSTNAME}" in body
     assert "VLAN 100" in body
     assert "VLAN 200" in body
     assert "VLAN 300" in body
     assert len(backups) == 1
     backup_text = backups[0].read_text(encoding="utf-8")
-    assert "hostname AUTOMATED_SWITCH" in backup_text
+    assert f"hostname {DEFAULT_HOSTNAME}" in backup_text
     assert "vlan 100" in backup_text
 
 
@@ -49,7 +63,7 @@ def test_flask_rejects_invalid_vlan_id():
             "device_ip": "192.0.2.10",
             "username": "admin",
             "password": "admin",
-            "hostname": "AUTOMATED_SWITCH",
+            "hostname": DEFAULT_HOSTNAME,
             "vlan_id_1": "abc",
             "vlan_name_1": "USERS",
             "vlan_id_2": "20",
@@ -75,7 +89,7 @@ def test_flask_rejects_duplicate_vlan_id():
             "device_ip": "192.0.2.10",
             "username": "admin",
             "password": "admin",
-            "hostname": "AUTOMATED_SWITCH",
+            "hostname": DEFAULT_HOSTNAME,
             "vlan_id_1": "10",
             "vlan_name_1": "USERS",
             "vlan_id_2": "10",

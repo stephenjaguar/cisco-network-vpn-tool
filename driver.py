@@ -14,6 +14,8 @@ DEFAULT_VLANS: Dict[int, str] = {
     50: "VLAN_SECURITY",
 }
 
+DEFAULT_HOSTNAME = "AUTOMATED_SWITCH"
+
 
 class BaseSwitchDriver(ABC):
     """Interface shared by mock and real Cisco switch drivers."""

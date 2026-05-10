@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from flask import Flask, render_template, request
 
-from driver import DEFAULT_VLANS, create_driver
+from driver import DEFAULT_HOSTNAME, DEFAULT_VLANS, create_driver
 from validator import validate_switch_state
 
 
@@ -16,7 +16,7 @@ def index():
     return render_template(
         "index.html",
         vlans=DEFAULT_VLANS,
-        default_hostname="AUTOMATED_SWITCH",
+        default_hostname=DEFAULT_HOSTNAME,
         result=None,
     )
 
@@ -26,11 +26,11 @@ def automate_switch():
     device_ip = request.form.get("device_ip", "").strip()
     username = request.form.get("username", "").strip()
     password = request.form.get("password", "")
-    hostname = request.form.get("hostname", "AUTOMATED_SWITCH").strip()
+    hostname = request.form.get("hostname", DEFAULT_HOSTNAME).strip()
     driver_mode = request.form.get("driver_mode", "mock")
 
     if not hostname:
-        hostname = "AUTOMATED_SWITCH"
+        hostname = DEFAULT_HOSTNAME
 
     result = {
         "commands": [],
