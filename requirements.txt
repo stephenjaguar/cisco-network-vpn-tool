@@ -1,0 +1,4 @@
+flask
+netmiko
+pytest
+python-dotenv
