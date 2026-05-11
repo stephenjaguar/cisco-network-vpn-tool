@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from driver import DEFAULT_HOSTNAME, DEFAULT_VLANS, MockSwitchDriver
+from driver import DEFAULT_HOSTNAME, DEFAULT_VLANS, NetmikoSwitchDriver, MockSwitchDriver
 
 
 def test_mock_driver_applies_hostname_and_vlans():
@@ -29,3 +29,33 @@ def test_mock_driver_writes_backup(tmp_path):
     assert backup_path.name.startswith(f"{DEFAULT_HOSTNAME}_")
     assert backup_path.suffix == ".cfg"
     assert f"hostname {DEFAULT_HOSTNAME}" in backup_path.read_text(encoding="utf-8")
+
+
+class FakeNetmikoConnection:
+    def __init__(self):
+        self.config_calls = []
+        self.command_calls = []
+
+    def send_config_set(self, commands, **kwargs):
+        self.config_calls.append((commands, kwargs))
+        return "config output"
+
+    def send_command(self, command, **kwargs):
+        self.command_calls.append((command, kwargs))
+        return "command output"
+
+
+def test_netmiko_commands_use_one_minute_read_timeout():
+    driver = NetmikoSwitchDriver("192.0.2.10", "admin", "admin")
+    connection = FakeNetmikoConnection()
+    driver.connection = connection
+
+    assert driver.push_vlan_config({10: "VLAN_DATA"}) == "config output"
+    assert driver.get_running_config() == "command output"
+
+    assert connection.config_calls == [
+        (["vlan 10", "name VLAN_DATA"], {"read_timeout": 60})
+    ]
+    assert connection.command_calls == [
+        ("show running-config", {"read_timeout": 60})
+    ]

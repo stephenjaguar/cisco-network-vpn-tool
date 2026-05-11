@@ -15,6 +15,7 @@ DEFAULT_VLANS: Dict[int, str] = {
 }
 
 DEFAULT_HOSTNAME = "AUTOMATED_SWITCH"
+NETMIKO_READ_TIMEOUT = 60
 
 
 class BaseSwitchDriver(ABC):
@@ -169,11 +170,11 @@ class NetmikoSwitchDriver(BaseSwitchDriver):
 
     def _send_config(self, commands: list[str]) -> str:
         self._require_connection()
-        return self.connection.send_config_set(commands)
+        return self.connection.send_config_set(commands, read_timeout=NETMIKO_READ_TIMEOUT)
 
     def _send_command(self, command: str) -> str:
         self._require_connection()
-        return self.connection.send_command(command)
+        return self.connection.send_command(command, read_timeout=NETMIKO_READ_TIMEOUT)
 
     def _require_connection(self) -> None:
         if self.connection is None:
