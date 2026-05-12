@@ -19,6 +19,7 @@ def index():
     return render_template(
         "index.html",
         vlan_rows=_default_vlan_rows(),
+        extra_vlan=_empty_extra_vlan(),
         default_hostname=DEFAULT_HOSTNAME,
         result=None,
     )
@@ -67,6 +68,7 @@ def automate_switch():
     return render_template(
         "index.html",
         vlan_rows=_submitted_vlan_rows(request.form),
+        extra_vlan=_submitted_extra_vlan(request.form),
         default_hostname=hostname,
         result=result,
     )
@@ -86,7 +88,7 @@ def download_backup(filename: str):
 
 
 def parse_vlan_form(form) -> dict[int, str]:
-    """Parse three editable VLAN rows from the Flask form."""
+    """Parse policy VLAN rows plus one optional additional VLAN row."""
     vlans: dict[int, str] = {}
 
     for index in range(1, 4):
@@ -108,6 +110,24 @@ def parse_vlan_form(form) -> dict[int, str]:
 
         vlans[vlan_id] = vlan_name
 
+    extra_vlan_id_raw = form.get("extra_vlan_id", "").strip()
+    extra_vlan_name = form.get("extra_vlan_name", "").strip()
+    if extra_vlan_id_raw or extra_vlan_name:
+        if not extra_vlan_id_raw:
+            raise ValueError("Additional VLAN: VLAN ID is required when name is set")
+        if not extra_vlan_id_raw.isdigit():
+            raise ValueError("Additional VLAN: VLAN ID must be numeric")
+
+        extra_vlan_id = int(extra_vlan_id_raw)
+        if extra_vlan_id < 1 or extra_vlan_id > 4094:
+            raise ValueError("Additional VLAN: VLAN ID must be between 1 and 4094")
+        if not extra_vlan_name:
+            raise ValueError("Additional VLAN: VLAN name is required when ID is set")
+        if extra_vlan_id in vlans:
+            raise ValueError(f"Duplicate VLAN ID submitted: {extra_vlan_id}")
+
+        vlans[extra_vlan_id] = extra_vlan_name
+
     return vlans
 
 
@@ -127,6 +147,17 @@ def _submitted_vlan_rows(form) -> list[dict[str, str]]:
             {"id": vlan_id_raw or str(default_id), "name": vlan_name or default_name}
         )
     return rows
+
+
+def _empty_extra_vlan() -> dict[str, str]:
+    return {"id": "", "name": ""}
+
+
+def _submitted_extra_vlan(form) -> dict[str, str]:
+    return {
+        "id": form.get("extra_vlan_id", "").strip(),
+        "name": form.get("extra_vlan_name", "").strip(),
+    }
 
 
 if __name__ == "__main__":

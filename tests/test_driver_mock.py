@@ -1,5 +1,8 @@
 from pathlib import Path
 
+import sys
+import types
+
 from driver import DEFAULT_HOSTNAME, DEFAULT_VLANS, NetmikoSwitchDriver, MockSwitchDriver
 
 
@@ -59,3 +62,21 @@ def test_netmiko_commands_use_one_minute_read_timeout():
     assert connection.command_calls == [
         ("show running-config", {"read_timeout": 60})
     ]
+
+
+def test_netmiko_connect_uses_fifteen_second_connection_timeouts(monkeypatch):
+    captured_kwargs = {}
+
+    def fake_connect_handler(**kwargs):
+        captured_kwargs.update(kwargs)
+        return FakeNetmikoConnection()
+
+    fake_netmiko = types.SimpleNamespace(ConnectHandler=fake_connect_handler)
+    monkeypatch.setitem(sys.modules, "netmiko", fake_netmiko)
+
+    driver = NetmikoSwitchDriver("192.0.2.10", "admin", "admin")
+
+    assert driver.connect() == "Connected to Cisco IOS device at 192.0.2.10"
+    assert captured_kwargs["conn_timeout"] == 15
+    assert captured_kwargs["auth_timeout"] == 15
+    assert captured_kwargs["banner_timeout"] == 15

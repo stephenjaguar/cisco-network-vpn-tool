@@ -157,6 +157,28 @@
             </tbody>
           </table>
 
+          <h2 style="margin-top: 22px;">Additional VLAN</h2>
+          <table>
+            <thead>
+              <tr><th>VLAN ID</th><th>Name</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <input
+                    name="extra_vlan_id"
+                    value="{{ extra_vlan.id }}"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                  >
+                </td>
+                <td>
+                  <input name="extra_vlan_name" value="{{ extra_vlan.name }}">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
           <button type="submit">Run Automation</button>
         </form>
       </section>

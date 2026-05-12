@@ -15,6 +15,7 @@ DEFAULT_VLANS: Dict[int, str] = {
 }
 
 DEFAULT_HOSTNAME = "AUTOMATED_SWITCH"
+NETMIKO_CONN_TIMEOUT = 15
 NETMIKO_READ_TIMEOUT = 60
 
 
@@ -144,6 +145,9 @@ class NetmikoSwitchDriver(BaseSwitchDriver):
             host=self.device_ip,
             username=self.username,
             password=self.password,
+            conn_timeout=NETMIKO_CONN_TIMEOUT,
+            auth_timeout=NETMIKO_CONN_TIMEOUT,
+            banner_timeout=NETMIKO_CONN_TIMEOUT,
         )
         return f"Connected to Cisco IOS device at {self.device_ip}"
 

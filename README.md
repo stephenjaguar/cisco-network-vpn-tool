@@ -1,79 +1,70 @@
-# Cisco Network Automation & IPSec VPN Planning Tool
+# Cisco IOS Switch Automation for GNS3
 
-This project is an interview-ready Python automation tool for Cisco IOS switch configuration and validation. It uses Flask for the frontend, Netmiko for real SSH support, and a built-in mock Cisco driver for local testing without GNS3, EVE-NG, VMware, or VirtualBox.
+This project is a Flask-based Python tool for configuring a Cisco IOS switch from a browser. It supports a local mock driver for testing and a Netmiko SSH driver for a Cisco IOSvL2 switch running in GNS3.
 
-Repository URL:
+The app can configure:
 
-```text
-https://github.com/stephenjaguar/cisco-network-vpn-tool
-```
-
-## Features
-
-- Browser UI for device IP, username, password, hostname, and editable VLAN rows.
-- Default VLAN intent:
+- Switch hostname
+- Required VLANs:
   - VLAN 10: `VLAN_DATA`
   - VLAN 20: `VLAN_VOICE`
   - VLAN 50: `VLAN_SECURITY`
-- Hostname configuration with default `AUTOMATED_SWITCH`.
-- VLAN ID/name input with validation for numeric IDs, valid VLAN range, required names, and duplicate IDs.
-- Save configuration with `write memory`.
-- Backup running config to `backups/[hostname]_[timestamp].cfg`.
-- Compliance validation from Cisco-like command output.
-- Mock driver default for reliable demos and tests.
-- Optional Netmiko driver for real Cisco IOS devices.
+- One optional additional VLAN ID/name
+- `write memory`
+- Local running-config backup
+- Compliance validation for hostname and the three required VLANs
 
-## Part 2: IPSec VPN Planning Deliverables
+The optional additional VLAN is pushed to the switch, but it is not part of the compliance check.
 
-The FortiGate-to-Palo Alto IPSec VPN planning requirement is covered by these files:
+## Project Files
 
-| Requirement Area | File |
+| File | Purpose |
 | --- | --- |
-| VPN automation plan | `VPN_PLAN.md` |
-| Part 2 review index | `PART2_VPN_DELIVERABLES.md` |
-| FortiGate conceptual config | `examples/fortigate_ipsec_cli.conf` |
-| Palo Alto conceptual config | `examples/paloalto_ipsec_set_commands.txt` |
-| Optional tunnel connectivity helper | `scripts/vpn_connectivity_check.py` |
+| `main.py` | Flask frontend, form parsing, automation workflow |
+| `driver.py` | Mock and Netmiko switch drivers |
+| `validator.py` | Compliance report logic |
+| `templates/index.html` | Browser UI |
+| `tests/` | Pytest coverage |
+| `scripts/device_reachability_check.py` | Optional SSH reachability helper |
+| `backups/` | Generated running-config backups |
 
-`PART2_VPN_DELIVERABLES.md` maps each Part 2 evaluation criterion to the exact repository artifact.
+## Requirements
 
-## Cisco Mocking Approach
+- Python 3
+- GNS3
+- Cisco IOSvL2 image added to GNS3
+- IP reachability from your Mac to the GNS3 switch management IP
+- SSH enabled on the IOSvL2 switch
 
-The default mode uses `MockSwitchDriver`, an in-process Python mock of a Cisco IOS switch. It does not start a virtual machine or external network emulator. The mock stores hostname and VLAN state, returns Cisco-like `show vlan brief` and hostname output, and generates a running config for backup testing.
+Python dependencies are listed in `requirements.txt`:
 
-This keeps the interview demo deterministic while preserving a clean driver interface for real Netmiko-based devices later.
-
-For the assignment simulation requirement, see `simulation/PACKET_TRACER_GNS3_TESTING.md`, `simulation/README.md`, and `PACKET_TRACER_SETUP.md`. Packet Tracer or GNS3 can provide a Cisco switch with SSH enabled, and the Flask app can connect to that switch through the `Netmiko Cisco IOS SSH` driver.
+```text
+flask
+netmiko
+pytest
+python-dotenv
+```
 
 ## Setup
 
+From the project directory:
+
 ```bash
-cd ~/Learning/cisco-network-vpn-tool
-chmod +x setup_all.sh
-./setup_all.sh
+cd /Users/thunder/Documents/Meli
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-For detailed setup, test, and real Cisco switch instructions, see `SETUP_GUIDE.md`.
-
-The English translation of the Spanish assignment is saved in `ASSIGNMENT_TRANSLATION.md`, and the requirement-by-requirement comparison is saved in `REQUIREMENTS_COMPARISON.md`.
-
-## Run Tests
+Run tests:
 
 ```bash
-source .venv/bin/activate
-pytest -v
+pytest -q
 ```
 
-See `TEST_PLAN.md` for the complete verification procedure and expected results.
-
-## Interview Overview
-
-Open `interview_overview.html` in a browser for a single-page explanation of the design thinking, mock strategy, validation flow, and real Cisco switch connection process.
-
-## Run the App
+Run the app:
 
 ```bash
-source .venv/bin/activate
 python main.py
 ```
 
@@ -83,58 +74,154 @@ Open:
 http://127.0.0.1:5000
 ```
 
-Use `Mock Cisco IOS Driver` for the normal demo. Use `Netmiko Cisco IOS SSH` only when you have a reachable Cisco IOS device or lab image.
+## GNS3 IOSvL2 Setup
 
-The VLAN rows are editable, but compliance validation is fixed to the assignment policy. The final switch state must contain:
+In GNS3, add and start your IOSvL2 switch. Give it a management IP that your Mac can reach, for example `192.168.31.50`.
 
-| VLAN ID | Name |
+Example switch-side SSH setup:
+
+```text
+enable
+conf t
+hostname GNS3-SW
+ip domain-name lab.local
+username admin privilege 15 secret admin
+crypto key generate rsa modulus 2048
+ip ssh version 2
+
+interface vlan 1
+ ip address 192.168.31.50 255.255.255.0
+ no shutdown
+exit
+
+ip default-gateway 192.168.31.1
+
+line vty 0 4
+ login local
+ transport input ssh
+end
+write memory
+```
+
+Make sure at least one switch port in VLAN 1 is up, otherwise `interface vlan 1` may remain down.
+
+Verify on the switch:
+
+```text
+show ip interface brief
+show ip ssh
+show running-config | section line vty
+```
+
+Verify from your Mac:
+
+```bash
+ping 192.168.31.50
+nc -vz 192.168.31.50 22
+```
+
+Both tests should succeed before using the Netmiko driver in the frontend.
+
+## Frontend Usage
+
+The browser form has these fields:
+
+| Field | Meaning |
 | --- | --- |
-| `10` | `VLAN_DATA` |
-| `20` | `VLAN_VOICE` |
-| `50` | `VLAN_SECURITY` |
+| Driver | `Mock Cisco IOS Driver` or `Netmiko Cisco IOS SSH` |
+| Device IP | GNS3 switch management IP, such as `192.168.31.50` |
+| Username | IOS local username |
+| Password | IOS local password |
+| Hostname | Hostname to configure and validate |
+| VLAN Configuration | Required VLAN rows used for compliance |
+| Additional VLAN | Optional VLAN pushed to the switch only |
 
-If the submitted VLAN IDs or names do not match this policy, the app displays `NON_COMPLIANT` and shows the mismatch alert.
+When you click **Run Automation**, the app:
 
-## Optional Real Device Mode
+1. Connects to the selected driver.
+2. Pushes the hostname.
+3. Pushes the three required VLANs and optional additional VLAN if provided.
+4. Runs `write memory`.
+5. Reads the running config and writes a local backup.
+6. Runs compliance validation for hostname, VLAN 10, VLAN 20, and VLAN 50.
 
-Netmiko mode expects a Cisco IOS SSH target and uses:
+## Compliance Logic
 
-- `hostname <name>`
-- `vlan <id>`
-- `name <vlan_name>`
-- `write memory`
-- `show running-config`
-- `show vlan brief`
-- `show run | i ^hostname`
+Compliance is checked against:
 
-Do not use real device mode against production equipment without change approval.
+| Item | Expected |
+| --- | --- |
+| Hostname | The hostname submitted in the frontend |
+| VLAN 10 | `VLAN_DATA` |
+| VLAN 20 | `VLAN_VOICE` |
+| VLAN 50 | `VLAN_SECURITY` |
 
-## Backup Location
+The optional additional VLAN is not checked for compliance. It can be any valid VLAN ID/name as long as the VLAN ID does not duplicate one of the submitted VLAN rows.
 
-Every successful run writes a running-config backup here:
+The frontend shows:
+
+- `COMPLIANT` when all required checks pass
+- `NON_COMPLIANT` when hostname or required VLAN output does not match
+- Alert messages for each mismatch
+
+## Netmiko Driver Details
+
+The Netmiko driver uses:
+
+- `device_type="cisco_ios"`
+- SSH port `22`
+- `conn_timeout=15`
+- `auth_timeout=15`
+- `banner_timeout=15`
+- `read_timeout=60` for config and show commands
+
+Commands sent by the app include:
+
+```text
+hostname <hostname>
+vlan <id>
+name <vlan_name>
+write memory
+show running-config
+show vlan brief
+show run | i ^hostname
+```
+
+## Backups
+
+Every successful run writes a backup file:
 
 ```text
 backups/[hostname]_[YYYYMMDD_HHMMSS].cfg
 ```
 
-Generated backups are ignored by Git because they may contain device-specific configuration. The README and `TEST_PLAN.md` describe how to verify that the backup exists and contains the configured hostname and VLANs.
+The backup contains the running config returned by the selected driver.
 
-## Assignment Requirements Mapping
+## Troubleshooting GNS3 SSH
 
-| Requirement | Implementation |
-| --- | --- |
-| Git repository and README | This repo plus this README |
-| Python automation script | `main.py`, `driver.py`, `validator.py` |
-| Frontend for VLAN and hostname input | Flask UI in `templates/index.html` |
-| VLAN 10/20/50 support | Default editable VLAN rows |
-| Apply VLAN config to Cisco switch | `NetmikoSwitchDriver.push_vlan_config()` |
-| Change hostname | `push_hostname()` through mock or Netmiko driver |
-| Save to NVRAM | `save_config()` runs `write memory` |
-| Backup config | `backup_config()` writes timestamped local files |
-| Validate config and alert on drift | `validate_switch_state()` and frontend compliance report |
-| Packet Tracer/GNS3 simulation path | `simulation/PACKET_TRACER_GNS3_TESTING.md`, `simulation/`, and `PACKET_TRACER_SETUP.md` |
-| VPN automation planning | `VPN_PLAN.md` |
-| Part 2 VPN deliverables index | `PART2_VPN_DELIVERABLES.md` |
-| Optional VPN examples | `examples/fortigate_ipsec_cli.conf`, `examples/paloalto_ipsec_set_commands.txt` |
-| Optional tunnel test helper | `scripts/vpn_connectivity_check.py` |
-| Test plan | `TEST_PLAN.md` |
+If the frontend shows a TCP connection failure for `cisco_ios <ip>:22`, check:
+
+```bash
+ping <switch-ip>
+nc -vz <switch-ip> 22
+```
+
+If `ping` fails, check the GNS3 topology, management IP, subnet, cloud/NAT adapter, and macOS network path.
+
+If `ping` works but TCP 22 fails, check IOS SSH configuration:
+
+```text
+show ip ssh
+show running-config | section line vty
+show ip interface brief
+```
+
+If Netmiko reports `No existing session`, the code already uses a 15 second connection timeout. Recheck reachability and SSH responsiveness from the terminal before retrying the frontend.
+
+## Mock Driver
+
+Use `Mock Cisco IOS Driver` when you want to test the frontend without GNS3. The mock driver keeps the configured hostname and VLANs in memory, returns Cisco-like show output, and creates a backup file.
+
+## Safety
+
+Use the Netmiko driver only against a lab switch or approved test device. The app changes hostname, VLAN configuration, and saves the configuration to startup-config.

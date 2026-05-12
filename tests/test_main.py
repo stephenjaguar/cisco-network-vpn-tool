@@ -94,6 +94,67 @@ def test_flask_reports_non_compliant_when_vlan_policy_does_not_match(monkeypatch
     assert "VLAN 10 mismatch: expected VLAN_DATA, got USERS" in body
 
 
+def test_flask_pushes_additional_vlan_without_compliance_check(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    client = app.test_client()
+
+    response = client.post(
+        "/",
+        data={
+            "driver_mode": "mock",
+            "device_ip": "192.0.2.10",
+            "username": "admin",
+            "password": "admin",
+            "hostname": DEFAULT_HOSTNAME,
+            "vlan_id_1": "10",
+            "vlan_name_1": "VLAN_DATA",
+            "vlan_id_2": "20",
+            "vlan_name_2": "VLAN_VOICE",
+            "vlan_id_3": "50",
+            "vlan_name_3": "VLAN_SECURITY",
+            "extra_vlan_id": "60",
+            "extra_vlan_name": "VLAN_GUEST",
+        },
+    )
+
+    body = response.get_data(as_text=True)
+    backups = list((tmp_path / "backups").glob(f"{DEFAULT_HOSTNAME}_*.cfg"))
+
+    assert response.status_code == 200
+    assert "COMPLIANT" in body
+    assert "Applied 4 VLAN definitions" in body
+    assert "VLAN 60" not in body
+    assert "VLAN_GUEST" in backups[0].read_text(encoding="utf-8")
+
+
+def test_flask_rejects_duplicate_additional_vlan_id():
+    client = app.test_client()
+
+    response = client.post(
+        "/",
+        data={
+            "driver_mode": "mock",
+            "device_ip": "192.0.2.10",
+            "username": "admin",
+            "password": "admin",
+            "hostname": DEFAULT_HOSTNAME,
+            "vlan_id_1": "10",
+            "vlan_name_1": "VLAN_DATA",
+            "vlan_id_2": "20",
+            "vlan_name_2": "VLAN_VOICE",
+            "vlan_id_3": "50",
+            "vlan_name_3": "VLAN_SECURITY",
+            "extra_vlan_id": "10",
+            "extra_vlan_name": "VLAN_EXTRA",
+        },
+    )
+
+    body = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "Duplicate VLAN ID submitted: 10" in body
+
+
 def test_flask_rejects_invalid_vlan_id():
     client = app.test_client()
 
