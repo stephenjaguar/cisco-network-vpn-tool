@@ -1,0 +1,34 @@
+# Conceptual PAN-OS IPSec VPN set commands
+# Values align with VPN_PLAN.md and are intended for planning/review, not blind production paste.
+
+set network ike crypto-profiles ike-crypto-profiles IKE-AES256-SHA256-DH14 dh-group group14
+set network ike crypto-profiles ike-crypto-profiles IKE-AES256-SHA256-DH14 authentication sha256
+set network ike crypto-profiles ike-crypto-profiles IKE-AES256-SHA256-DH14 encryption aes-256-cbc
+set network ike crypto-profiles ike-crypto-profiles IKE-AES256-SHA256-DH14 lifetime hours 8
+
+set network ike crypto-profiles ipsec-crypto-profiles IPSEC-AES256-SHA256-PFS14 esp authentication sha256
+set network ike crypto-profiles ipsec-crypto-profiles IPSEC-AES256-SHA256-PFS14 esp encryption aes-256-cbc
+set network ike crypto-profiles ipsec-crypto-profiles IPSEC-AES256-SHA256-PFS14 dh-group group14
+set network ike crypto-profiles ipsec-crypto-profiles IPSEC-AES256-SHA256-PFS14 lifetime hours 1
+
+set network interface tunnel units tunnel.10 ip 169.255.1.2/30
+set network ike gateway FGT-BRANCH-GW protocol ikev2 ike-crypto-profile IKE-AES256-SHA256-DH14
+set network ike gateway FGT-BRANCH-GW authentication pre-shared-key key STORE_IN_SECRET_MANAGER
+set network ike gateway FGT-BRANCH-GW protocol-common local-address interface ethernet1/1 ip 203.0.113.20
+set network ike gateway FGT-BRANCH-GW protocol-common peer-address ip 198.51.100.10
+
+set network tunnel ipsec FGT-BRANCH-TUNNEL auto-key ike-gateway FGT-BRANCH-GW
+set network tunnel ipsec FGT-BRANCH-TUNNEL auto-key ipsec-crypto-profile IPSEC-AES256-SHA256-PFS14
+set network tunnel ipsec FGT-BRANCH-TUNNEL tunnel-interface tunnel.10
+set network tunnel ipsec FGT-BRANCH-TUNNEL auto-key proxy-id FGT-BRANCH-PROXY local 10.20.20.0/24
+set network tunnel ipsec FGT-BRANCH-TUNNEL auto-key proxy-id FGT-BRANCH-PROXY remote 10.10.10.0/24
+set network tunnel ipsec FGT-BRANCH-TUNNEL auto-key proxy-id FGT-BRANCH-PROXY protocol any
+
+set network virtual-router default routing-table ip static-route FGT-LAN destination 10.10.10.0/24
+set network virtual-router default routing-table ip static-route FGT-LAN interface tunnel.10
+
+set address FGT_LAN_10.10.10.0_24 ip-netmask 10.10.10.0/24
+set address PA_LAN_10.20.20.0_24 ip-netmask 10.20.20.0/24
+set rulebase security rules PA-to-FGT-VPN from trust to vpn source PA_LAN_10.20.20.0_24 destination FGT_LAN_10.10.10.0_24 application any service application-default action allow
+
+commit
