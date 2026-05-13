@@ -14,8 +14,8 @@ This file is the review index for the FortiGate-to-Palo Alto IPSec VPN planning 
 | Heterogeneous vendor challenges | `VPN_PLAN.md` section: Interoperability Challenges |
 | VPN validation strategy | `VPN_PLAN.md` section: Validation and Alerting Strategy |
 | Alert handling | `VPN_PLAN.md` section: Validation and Alerting Strategy |
-| Optional FortiGate example | `examples/fortigate_ipsec_cli.conf` |
-| Optional Palo Alto example | `examples/paloalto_ipsec_set_commands.txt` |
+| Optional FortiGate example | `vpncliexamples/fortigate_ipsec_cli.conf` |
+| Optional Palo Alto example | `vpncliexamples/paloalto_ipsec_set_commands.txt` |
 | Optional connectivity test script | `scripts/vpn_connectivity_check.py` |
 
 ## VPN Parameter Summary

@@ -239,8 +239,8 @@ Part 2 deliverables:
 | `vpn_planner.py` | Python module that builds a structured VPN automation plan |
 | `scripts/generate_vpn_plan.py` | CLI that prints the structured plan as JSON |
 | `scripts/vpn_connectivity_check.py` | Simple post-build ICMP tunnel connectivity check |
-| `examples/fortigate_ipsec_cli.conf` | Conceptual FortiGate CLI example |
-| `examples/paloalto_ipsec_set_commands.txt` | Conceptual Palo Alto set-command example |
+| `vpncliexamples/fortigate_ipsec_cli.conf` | Conceptual FortiGate CLI example |
+| `vpncliexamples/paloalto_ipsec_set_commands.txt` | Conceptual Palo Alto set-command example |
 | `tests/test_vpn_planner.py` | Tests for the Part 2 plan builder |
 
 ### Part 2 VPN Parameters

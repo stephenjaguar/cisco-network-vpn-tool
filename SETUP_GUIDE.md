@@ -1,6 +1,6 @@
 # Step-by-Step Setup Guide
 
-This guide sets up the Cisco Network Automation & IPSec VPN Planning Tool on macOS. The default demo path uses a Python mock Cisco switch, so you do not need GNS3, EVE-NG, VMware, VirtualBox, or a physical Cisco switch.
+This guide sets up the current Cisco IOS switch automation and VPN planning repository on macOS. The default demo path uses a Python mock Cisco switch, so GNS3 is optional for local testing.
 
 ## 1. Confirm Prerequisites
 
@@ -21,10 +21,10 @@ If Python is missing, install it from Python.org or Homebrew.
 ## 2. Go to the Project Folder
 
 ```bash
-cd ~/Learning/cisco-network-vpn-tool
+cd /Users/thunder/Documents/Meli
 ```
 
-## 3. Run the One-Command Setup
+## 3. Run the Setup Script
 
 ```bash
 chmod +x setup_all.sh
@@ -65,7 +65,7 @@ Use these form values:
 
 | Field | Value |
 | --- | --- |
-| Driver | Mock Cisco IOS Driver |
+| Driver | `Mock Cisco IOS Driver` |
 | Device IP | `192.0.2.10` |
 | Username | `admin` |
 | Password | `admin` |
@@ -73,6 +73,7 @@ Use these form values:
 | VLAN row 1 | `10`, `VLAN_DATA` |
 | VLAN row 2 | `20`, `VLAN_VOICE` |
 | VLAN row 3 | `50`, `VLAN_SECURITY` |
+| Additional VLAN | leave blank, or use a non-duplicate VLAN such as `60`, `VLAN_GUEST` |
 
 Click `Run Automation`.
 
@@ -83,16 +84,24 @@ Expected:
 - VLAN 10, VLAN 20, and VLAN 50 checks are `PASS`.
 - A backup path is shown.
 
-You can also edit the VLAN rows before submitting. The app will apply the submitted VLANs, then validate the resulting switch state against the required assignment VLAN policy.
+The optional additional VLAN is pushed to the device or mock driver when provided, but it is not included in the compliance checks.
 
-Compliance is intentionally checked against the assignment VLAN policy. If VLAN 10 is not named `VLAN_DATA`, VLAN 20 is not named `VLAN_VOICE`, or VLAN 50 is not named `VLAN_SECURITY`, the result should be `NON_COMPLIANT`.
+Compliance is checked against the required VLAN policy:
+
+| VLAN | Expected Name |
+| --- | --- |
+| 10 | `VLAN_DATA` |
+| 20 | `VLAN_VOICE` |
+| 50 | `VLAN_SECURITY` |
+
+The hostname check uses the hostname submitted in the frontend.
 
 ## 6. Verify Backup File
 
 In a second Terminal window:
 
 ```bash
-cd ~/Learning/cisco-network-vpn-tool
+cd /Users/thunder/Documents/Meli
 ls backups
 ```
 
@@ -123,74 +132,80 @@ vlan 50
 ## 7. Run Tests Again Any Time
 
 ```bash
-cd ~/Learning/cisco-network-vpn-tool
+cd /Users/thunder/Documents/Meli
 source .venv/bin/activate
-pytest -v
+pytest -q
 ```
 
 Expected:
 
 ```text
-13 passed
+26 passed
 ```
 
-## 8. Open the Interview Explanation Page
+## 8. Optional GNS3 IOSvL2 Test
 
-Open this file in your browser:
+Use GNS3 when you want to test the real Netmiko SSH path.
+
+Follow:
 
 ```text
-~/Learning/cisco-network-vpn-tool/interview_overview.html
+PART1_FLASK_GNS3_SETUP.md
 ```
 
-It explains the thinking behind the design, why mock mode was used, how validation works, and how to connect to a real physical Cisco switch.
+Current GNS3 lab values in that guide:
 
-## 9. Real Cisco Switch Connection Checklist
+| Item | Value |
+| --- | --- |
+| Switch management IP | `192.168.31.50/24` |
+| Default gateway | `192.168.31.1` |
+| SSH username | `admin` |
+| SSH password | `admin` |
 
-Only use real device mode on a lab switch or a switch where you have permission to make changes.
-
-For the assignment's Packet Tracer or GNS3 simulation path, follow `simulation/PACKET_TRACER_GNS3_TESTING.md`, `simulation/README.md`, and `PACKET_TRACER_SETUP.md`. The same Netmiko mode is used whether the SSH target is a Packet Tracer switch, GNS3 switch, or physical Cisco switch.
-
-On the Cisco switch, SSH must be enabled. Example Cisco IOS preparation:
-
-```text
-enable
-configure terminal
-hostname LAB-SW1
-ip domain-name lab.local
-username admin privilege 15 secret StrongPassword123
-crypto key generate rsa modulus 2048
-ip ssh version 2
-line vty 0 4
- login local
- transport input ssh
-exit
-interface vlan 1
- ip address 192.168.1.10 255.255.255.0
- no shutdown
-exit
-ip default-gateway 192.168.1.1
-end
-write memory
-```
-
-From your Mac, verify reachability:
+Before using the frontend Netmiko driver, verify from macOS:
 
 ```bash
-ping 192.168.1.10
-ssh admin@192.168.1.10
+ping 192.168.31.50
+nc -vz 192.168.31.50 22
+```
+
+Optional helper:
+
+```bash
+python scripts/device_reachability_check.py 192.168.31.50 --username admin --password admin
 ```
 
 Then use the app with:
 
 | Field | Value |
 | --- | --- |
-| Driver | Netmiko Cisco IOS SSH |
-| Device IP | Real switch management IP |
-| Username | Cisco local username |
-| Password | Cisco local password |
-| Hostname | Desired switch hostname |
+| Driver | `Netmiko Cisco IOS SSH` |
+| Device IP | `192.168.31.50` |
+| Username | `admin` |
+| Password | `admin` |
+| Hostname | `AUTOMATED_SWITCH` or your chosen test hostname |
 
 The app will connect over SSH using Netmiko and run the same workflow as mock mode.
+
+## 9. Part 2 VPN Planning
+
+Part 2 is documentation and planning code for a FortiGate-to-Palo Alto IPSec VPN. It is separate from the Part 1 Flask workflow.
+
+Useful files:
+
+| File | Purpose |
+| --- | --- |
+| `VPN_PLAN.md` | Written Part 2 automation plan |
+| `vpn_planner.py` | Structured VPN plan builder |
+| `scripts/generate_vpn_plan.py` | Prints the Part 2 plan as JSON |
+| `scripts/vpn_connectivity_check.py` | Optional tunnel ping helper |
+| `vpncliexamples/` | FortiGate and Palo Alto conceptual CLI examples |
+
+Generate the JSON plan:
+
+```bash
+python scripts/generate_vpn_plan.py
+```
 
 ## Troubleshooting
 
@@ -211,6 +226,7 @@ Stop the existing process or change the port in `main.py`.
 If real Cisco mode fails:
 
 - Confirm the switch is reachable with `ping`.
+- Confirm TCP port 22 is open with `nc -vz <switch-ip> 22`.
 - Confirm SSH works manually.
 - Confirm the username has privilege to enter configuration mode.
 - Confirm the switch is Cisco IOS or IOS-like.

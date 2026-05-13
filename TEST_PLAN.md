@@ -1,38 +1,37 @@
-# Test Plan: Cisco Network Automation & IPSec VPN Planning Tool
+# Test Plan: Cisco IOS Switch Automation and VPN Planning
 
 ## Objective
 
-Verify that the project works as an interview-ready demo without requiring GNS3, EVE-NG, VMware, VirtualBox, or a physical Cisco switch. The default validation path uses the in-process `MockSwitchDriver`.
+Verify the current repository behavior without requiring a live Cisco switch. The default validation path uses the in-process `MockSwitchDriver`, while GNS3 IOSvL2 can be used for optional real SSH testing with Netmiko.
 
 ## Scope
 
 This test plan verifies:
 
 - Python environment setup.
+- Flask frontend workflow.
 - Mock Cisco switch automation.
 - Hostname and VLAN configuration logic.
+- Optional additional VLAN input.
 - Running-config backup creation.
 - Compliance validation.
-- Flask UI workflow.
-- Documentation deliverables.
-
-Real Cisco SSH testing through Netmiko is out of scope unless a lab switch, Cisco CML image, DevNet sandbox, or Containerlab Cisco IOL image is available.
-
-For this assignment, Packet Tracer or GNS3 can be used as the Cisco simulation path. See `simulation/PACKET_TRACER_GNS3_TESTING.md`, `simulation/README.md`, and `PACKET_TRACER_SETUP.md` for the device preparation and frontend values.
+- Part 2 VPN planning helpers.
+- Documentation/demo artifacts.
 
 ## Environment
 
 - macOS on Apple Silicon or Intel.
 - Python 3.10 or newer.
-- Project path: `~/Learning/cisco-network-vpn-tool`.
+- Project path: `/Users/thunder/Documents/Meli`.
 - Default driver: `Mock Cisco IOS Driver`.
+- Optional emulator: GNS3 IOSvL2.
 
 ## Setup Verification
 
 Run:
 
 ```bash
-cd ~/Learning/cisco-network-vpn-tool
+cd /Users/thunder/Documents/Meli
 chmod +x setup.sh
 ./setup.sh
 source .venv/bin/activate
@@ -62,41 +61,43 @@ dependencies ok
 Run:
 
 ```bash
-cd ~/Learning/cisco-network-vpn-tool
+cd /Users/thunder/Documents/Meli
 source .venv/bin/activate
-pytest -v
+pytest -q
 ```
 
 Expected result:
 
 ```text
-13 passed
+26 passed
 ```
 
 The automated tests verify:
 
 - `MockSwitchDriver` applies hostname changes.
-- `MockSwitchDriver` applies VLAN 10, 20, and 50.
-- Flask workflow accepts custom VLAN IDs and names from the GUI.
-- Flask workflow reports `NON_COMPLIANT` if submitted VLANs do not match the required assignment policy.
-- Flask workflow rejects non-numeric VLAN IDs.
-- Flask workflow rejects duplicate VLAN IDs.
-- Optional VPN connectivity helper builds the correct platform-specific ping command.
+- `MockSwitchDriver` applies VLAN 10, VLAN 20, and VLAN 50.
 - `MockSwitchDriver` returns Cisco-like `show vlan brief` output.
 - `MockSwitchDriver` writes a local backup config.
-- Validator returns `COMPLIANT` when intended state matches observed output.
-- Validator returns `NON_COMPLIANT` for missing VLANs.
-- Validator returns `NON_COMPLIANT` for wrong VLAN names.
-- Validator returns `NON_COMPLIANT` for hostname mismatch.
-- Flask POST workflow runs the full mock automation path and renders `COMPLIANT`.
-- Flask POST workflow creates a backup file.
+- `NetmikoSwitchDriver` uses 15 second connection/auth/banner timeouts.
+- `NetmikoSwitchDriver` uses 60 second command read timeouts.
+- `NetmikoSwitchDriver` uses a generic IOS prompt pattern for `>` or `#`.
+- Flask renders the default frontend values.
+- Flask workflow accepts required VLAN rows and optional additional VLAN input.
+- Flask workflow reports `COMPLIANT` when observed output matches intended hostname and required VLANs.
+- Flask workflow reports `NON_COMPLIANT` when required VLAN names do not match.
+- Flask workflow rejects non-numeric VLAN IDs.
+- Flask workflow rejects duplicate VLAN IDs.
+- Validator returns `COMPLIANT` and `NON_COMPLIANT` reports correctly.
+- Part 1 reachability helpers build expected ping/TCP checks.
+- Part 2 VPN planner builds required parameters, mirrored selectors, tools, steps, validation checks, and alerts.
+- Part 2 VPN connectivity helper builds the correct platform-specific ping command.
 
 ## Manual UI Test
 
 Start the app:
 
 ```bash
-cd ~/Learning/cisco-network-vpn-tool
+cd /Users/thunder/Documents/Meli
 source .venv/bin/activate
 python main.py
 ```
@@ -111,7 +112,7 @@ Submit the form with:
 
 | Field | Value |
 | --- | --- |
-| Driver | Mock Cisco IOS Driver |
+| Driver | `Mock Cisco IOS Driver` |
 | Device IP | `192.0.2.10` |
 | Username | `admin` |
 | Password | `admin` |
@@ -119,6 +120,7 @@ Submit the form with:
 | VLAN row 1 | `10`, `VLAN_DATA` |
 | VLAN row 2 | `20`, `VLAN_VOICE` |
 | VLAN row 3 | `50`, `VLAN_SECURITY` |
+| Additional VLAN | leave blank, or use a non-duplicate VLAN such as `60`, `VLAN_GUEST` |
 
 Expected page result:
 
@@ -130,25 +132,38 @@ Expected page result:
 - VLAN 20 check is `PASS`.
 - VLAN 50 check is `PASS`.
 
-Custom VLAN input test:
+The optional additional VLAN is pushed to the switch when provided, but it is not part of the compliance report.
 
-- Change row 1 to `10` and `USERS`.
-- Keep row 2 as `20` and `VLAN_VOICE`.
-- Keep row 3 as `50` and `VLAN_SECURITY`.
-- Submit again.
+## Negative Validation Test
+
+Submit the form with VLAN 10 changed to `USERS`:
+
+| Field | Value |
+| --- | --- |
+| VLAN row 1 | `10`, `USERS` |
+| VLAN row 2 | `20`, `VLAN_VOICE` |
+| VLAN row 3 | `50`, `VLAN_SECURITY` |
 
 Expected page result:
 
 - Compliance status is `NON_COMPLIANT`.
 - An alert explains that VLAN 10 expected `VLAN_DATA` but observed `USERS`.
 
-Verify backup file:
+Other expected non-compliant cases:
+
+- Missing VLAN 50.
+- VLAN 20 named incorrectly.
+- Hostname observed from the switch does not match the hostname submitted in the frontend.
+
+## Backup Verification
+
+After a successful run:
 
 ```bash
 ls backups
 ```
 
-Expected result:
+Expected file pattern:
 
 ```text
 AUTOMATED_SWITCH_<timestamp>.cfg
@@ -172,43 +187,61 @@ vlan 50
  name VLAN_SECURITY
 ```
 
-## Negative Validation Tests
+If an optional additional VLAN was submitted, the backup should include it too.
 
-These are covered by `pytest`, but they can also be explained in the interview:
+## Optional GNS3 Netmiko Test
 
-- Missing VLAN 50 should produce `NON_COMPLIANT`.
-- VLAN 20 named incorrectly should produce `NON_COMPLIANT`.
-- Hostname different from `AUTOMATED_SWITCH` should produce `NON_COMPLIANT`.
+Use `PART1_FLASK_GNS3_SETUP.md` for the GNS3 IOSvL2 setup. The expected switch management IP in that guide is:
 
-The validator reports exact mismatch alerts so the operator can see which intended state failed.
+```text
+192.168.31.50/24
+```
+
+Before using Netmiko mode, verify from macOS:
+
+```bash
+ping 192.168.31.50
+nc -vz 192.168.31.50 22
+```
+
+You can also run:
+
+```bash
+python scripts/device_reachability_check.py 192.168.31.50 --username admin --password admin
+```
 
 ## Documentation Verification
 
 Confirm the required deliverables exist:
 
 ```bash
-ls README.md VPN_PLAN.md TEST_PLAN.md main.py driver.py validator.py setup.sh
+ls README.md VPN_PLAN.md TEST_PLAN.md SETUP_GUIDE.md PART1_FLASK_GNS3_SETUP.md
+ls main.py driver.py validator.py vpn_planner.py
+ls demoresult vpncliexamples templates/README.md
 ```
 
 Expected result:
 
-- `README.md` explains setup, mock mode, and real Netmiko mode.
-- `VPN_PLAN.md` documents FortiGate-to-Palo Alto IPSec VPN automation.
+- `README.md` explains Part 1 and Part 2.
+- `VPN_PLAN.md` documents FortiGate-to-Palo Alto IPSec VPN automation planning.
 - `TEST_PLAN.md` documents setup, automated tests, manual tests, and expected results.
+- `PART1_FLASK_GNS3_SETUP.md` documents the GNS3 IOSvL2 simulation path.
+- `demoresult/` contains Part 1 screenshots.
+- `vpncliexamples/` contains Part 2 CLI examples.
 
 ## Pass Criteria
 
 The project is considered working when:
 
-- `pytest -v` returns all tests passing.
+- `pytest -q` returns `26 passed`.
 - The Flask app loads at `http://127.0.0.1:5000`.
-- Submitting the default or custom mock form returns `COMPLIANT`.
+- Submitting the default mock form returns `COMPLIANT`.
 - A backup config file is generated under `backups/`.
-- `README.md`, `VPN_PLAN.md`, and `TEST_PLAN.md` are present and complete.
-- `simulation/PACKET_TRACER_GNS3_TESTING.md`, `simulation/`, and `PACKET_TRACER_SETUP.md` document how to run the same workflow against a simulated Cisco switch.
+- Required documentation and demo artifacts are present.
 
 ## Known Limitations
 
 - Mock mode verifies logic, not real Cisco SSH reachability.
-- Netmiko mode requires a reachable Cisco IOS device and valid credentials.
+- Netmiko mode requires a reachable Cisco IOS or IOS-like device and valid credentials.
+- GNS3 reachability depends on the local GNS3 network/cloud/NAT setup.
 - PAN-OS REST endpoints can vary by PAN-OS version, so production automation should confirm resource URIs from `https://<PANOS_HOST>/restapi`.

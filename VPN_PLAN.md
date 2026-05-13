@@ -222,8 +222,8 @@ PROXY_ID_MISMATCH on PA-DC: expected local 10.20.20.0/24 remote 10.10.10.0/24, o
 
 The repository includes conceptual examples that align with this plan:
 
-- `examples/fortigate_ipsec_cli.conf`
-- `examples/paloalto_ipsec_set_commands.txt`
+- `vpncliexamples/fortigate_ipsec_cli.conf`
+- `vpncliexamples/paloalto_ipsec_set_commands.txt`
 - `scripts/vpn_connectivity_check.py`
 
 These are intentionally review-oriented examples. They should be adapted and tested in a lab before use on real firewalls.
