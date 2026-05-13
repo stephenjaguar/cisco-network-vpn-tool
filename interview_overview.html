@@ -147,7 +147,7 @@
 
     <section>
       <h2>Why Mock the Cisco Switch?</h2>
-      <p>The task constraints avoid VMware and VirtualBox. Mock mode provides deterministic local validation, while Packet Tracer or a physical switch can be used with Netmiko mode for Cisco SSH testing.</p>
+      <p>Mock mode provides deterministic local validation without a running emulator. GNS3 IOSvL2 can be used with Netmiko mode for real Cisco IOS SSH testing.</p>
       <p>The mock is not a fake test shortcut. It emulates the command outputs the validator depends on, including <code>show vlan brief</code>, <code>show run | i hostname</code>, and a running config backup.</p>
     </section>
 
@@ -156,7 +156,7 @@
       <ol>
         <li>The Flask UI collects device IP, username, password, driver mode, and hostname.</li>
         <li>The app creates either <code>MockSwitchDriver</code> or <code>NetmikoSwitchDriver</code>.</li>
-        <li>The driver applies hostname and submitted VLAN intent.</li>
+        <li>The driver applies hostname, the required VLAN rows, and one optional additional VLAN when provided.</li>
         <li>The driver saves configuration with <code>write memory</code>.</li>
         <li>The driver writes a local backup file under <code>backups/</code>.</li>
         <li>The validator checks command output against intended state.</li>
@@ -168,7 +168,7 @@
   -> create_driver("mock" or "netmiko")
   -> connect()
   -> push_hostname("AUTOMATED_SWITCH")
-      -> parse editable VLAN rows
+  -> parse editable VLAN rows and optional additional VLAN
   -> push_vlan_config(submitted VLANs)
   -> save_config()
   -> backup_config()
@@ -178,7 +178,7 @@
 
     <section>
       <h2>Editable VLAN Intent</h2>
-      <p>The UI defaults to the interview VLANs, but the operator can edit VLAN IDs and names before running automation.</p>
+      <p>The UI defaults to the interview VLANs, but the operator can edit VLAN IDs and names before running automation. One optional additional VLAN can also be pushed to the switch; it is not included in the compliance report.</p>
       <table>
         <thead>
           <tr><th>VLAN</th><th>Name</th><th>Purpose</th></tr>
@@ -192,24 +192,42 @@
     </section>
 
     <section>
+      <h2>Compliance Scope</h2>
+      <p>The validator compares observed device output against the hostname submitted in the frontend and the required VLAN policy.</p>
+      <table>
+        <thead>
+          <tr><th>Check</th><th>Expected Source</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Hostname</td><td>The hostname submitted in the Flask form.</td></tr>
+          <tr><td>VLAN 10</td><td><code>VLAN_DATA</code></td></tr>
+          <tr><td>VLAN 20</td><td><code>VLAN_VOICE</code></td></tr>
+          <tr><td>VLAN 50</td><td><code>VLAN_SECURITY</code></td></tr>
+          <tr><td>Additional VLAN</td><td>Pushed to the switch, but not checked for compliance.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
       <h2>How to Test the Project</h2>
-      <pre>cd ~/Learning/cisco-network-vpn-tool
+      <pre>cd /Users/thunder/Documents/Meli
 chmod +x setup_all.sh
 ./setup_all.sh
 source .venv/bin/activate
 python main.py</pre>
-      <p>Open <code>http://127.0.0.1:5000</code>, keep the driver set to <code>Mock Cisco IOS Driver</code>, and submit the form. Expected status: <span class="ok">COMPLIANT</span>.</p>
+      <p>Open <code>http://127.0.0.1:5000</code>, keep the driver set to <code>Mock Cisco IOS Driver</code>, and submit the form. Expected status: <span class="ok">COMPLIANT</span>. The current automated suite expects <code>26 passed</code>.</p>
     </section>
 
     <section>
-      <h2>How to Connect to a Real Physical Cisco Switch</h2>
-      <p>Use this only on lab equipment or a switch where changes are approved. The app will configure hostname and VLANs, save the config, and back up the running config.</p>
+      <h2>How to Connect to GNS3 IOSvL2</h2>
+      <p>Use this only on lab equipment or an approved emulator. The app will configure hostname and VLANs, save the config, back up the running config, and validate the required values.</p>
 
-      <h3>1. Cable and IP Connectivity</h3>
+      <h3>1. GNS3 Connectivity</h3>
       <ul>
-        <li>Connect your Mac to the switch management network.</li>
-        <li>Assign the switch a reachable management IP.</li>
-        <li>Confirm your Mac can reach the switch with <code>ping</code>.</li>
+        <li>Add an IOSvL2 switch to GNS3.</li>
+        <li>Connect it to a GNS3 cloud/NAT or management network reachable from the Mac.</li>
+        <li>Assign the switch management SVI <code>192.168.31.50/24</code> with default gateway <code>192.168.31.1</code>.</li>
+        <li>Confirm the Mac can reach the switch with <code>ping</code> and TCP port <code>22</code>.</li>
       </ul>
 
       <h3>2. Prepare SSH on Cisco IOS</h3>
@@ -217,7 +235,7 @@ python main.py</pre>
 configure terminal
 hostname LAB-SW1
 ip domain-name lab.local
-username admin privilege 15 secret StrongPassword123
+username admin privilege 15 secret admin
 crypto key generate rsa modulus 2048
 ip ssh version 2
 line vty 0 4
@@ -225,16 +243,17 @@ line vty 0 4
  transport input ssh
 exit
 interface vlan 1
- ip address 192.168.1.10 255.255.255.0
+ ip address 192.168.31.50 255.255.255.0
  no shutdown
 exit
-ip default-gateway 192.168.1.1
+ip default-gateway 192.168.31.1
 end
 write memory</pre>
 
       <h3>3. Verify SSH from macOS</h3>
-      <pre>ping 192.168.1.10
-ssh admin@192.168.1.10</pre>
+      <pre>ping 192.168.31.50
+nc -vz 192.168.31.50 22
+ssh admin@192.168.31.50</pre>
 
       <h3>4. Use Netmiko Mode in the App</h3>
       <table>
@@ -243,10 +262,10 @@ ssh admin@192.168.1.10</pre>
         </thead>
         <tbody>
           <tr><td>Driver</td><td><code>Netmiko Cisco IOS SSH</code></td></tr>
-          <tr><td>Device IP</td><td>Real switch management IP, for example <code>192.168.1.10</code></td></tr>
-          <tr><td>Username</td><td>Cisco local username, for example <code>admin</code></td></tr>
-          <tr><td>Password</td><td>Cisco local password</td></tr>
-          <tr><td>Hostname</td><td>Desired hostname, for example <code>AUTOMATED_SWITCH</code></td></tr>
+          <tr><td>Device IP</td><td><code>192.168.31.50</code></td></tr>
+          <tr><td>Username</td><td><code>admin</code></td></tr>
+          <tr><td>Password</td><td><code>admin</code></td></tr>
+          <tr><td>Hostname</td><td>Desired hostname, default <code>AUTOMATED_SWITCH</code></td></tr>
         </tbody>
       </table>
 
@@ -265,7 +284,41 @@ show running-config
 show vlan brief
 show run | i ^hostname</pre>
 
+      <h3>6. Netmiko Reliability Settings</h3>
+      <ul>
+        <li>Connection, authentication, and banner timeout: <code>15</code> seconds.</li>
+        <li>Command read timeout: <code>60</code> seconds.</li>
+        <li>Prompt matching uses a generic IOS pattern: <code>[&gt;#]</code>.</li>
+        <li>Hostname changes disable command verification and refresh Netmiko's base prompt afterward.</li>
+      </ul>
+
       <p class="warn">Do not run real-device mode on production equipment without approval and a rollback plan.</p>
+    </section>
+
+    <section>
+      <h2>Part 2 VPN Planning Artifacts</h2>
+      <p>Part 2 is separate from the Flask switch workflow. It documents and structures a FortiGate-to-Palo Alto IPSec VPN automation plan.</p>
+      <table>
+        <thead>
+          <tr><th>Artifact</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>VPN_PLAN.md</code></td><td>Detailed FortiGate-to-Palo Alto IPSec VPN automation plan.</td></tr>
+          <tr><td><code>vpn_planner.py</code></td><td>Builds a structured plan with parameters, API options, steps, checks, and alerts.</td></tr>
+          <tr><td><code>scripts/generate_vpn_plan.py</code></td><td>Prints the Part 2 structured plan as JSON.</td></tr>
+          <tr><td><code>vpncliexamples/</code></td><td>Conceptual FortiGate and Palo Alto CLI examples.</td></tr>
+          <tr><td><code>scripts/vpn_connectivity_check.py</code></td><td>Optional ICMP helper for post-tunnel connectivity checks.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Demo Evidence</h2>
+      <p>Part 1 screenshot evidence is stored under <code>demoresult/</code>.</p>
+      <ul>
+        <li><code>demoresult/part1screenshot.md</code> indexes the evidence screenshots.</li>
+        <li><code>demoresult/part1screenshot/</code> contains screenshots for frontend operation, switch configuration, CLI output, validation alerts, compliance, and backup evidence.</li>
+      </ul>
     </section>
 
     <section>
