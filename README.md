@@ -26,6 +26,10 @@ The optional additional VLAN is pushed to the switch, but it is not part of the 
 | `templates/index.html` | Browser UI |
 | `tests/` | Pytest coverage |
 | `scripts/device_reachability_check.py` | Optional SSH reachability helper |
+| `VPN_PLAN.md` | Part 2 FortiGate-to-Palo Alto VPN automation plan |
+| `vpn_planner.py` | Part 2 structured VPN plan builder |
+| `scripts/generate_vpn_plan.py` | Part 2 JSON plan generator |
+| `scripts/vpn_connectivity_check.py` | Optional Part 2 VPN reachability helper |
 | `backups/` | Generated running-config backups |
 
 ## Requirements
@@ -221,6 +225,121 @@ If Netmiko reports `No existing session`, the code already uses a 15 second conn
 ## Mock Driver
 
 Use `Mock Cisco IOS Driver` when you want to test the frontend without GNS3. The mock driver keeps the configured hostname and VLANs in memory, returns Cisco-like show output, and creates a backup file.
+
+## Part 2: FortiGate to Palo Alto IPSec VPN Automation Planning
+
+Part 1 is the GNS3 Cisco switch automation app described above. Part 2 is kept in the same Git repository but separated from the Part 1 Flask workflow so the working switch automation code is not affected.
+
+Part 2 deliverables:
+
+| Artifact | Purpose |
+| --- | --- |
+| `VPN_PLAN.md` | Markdown plan for automating an IPSec VPN between FortiGate and Palo Alto |
+| `PART2_VPN_DELIVERABLES.md` | Requirement-to-artifact review index |
+| `vpn_planner.py` | Python module that builds a structured VPN automation plan |
+| `scripts/generate_vpn_plan.py` | CLI that prints the structured plan as JSON |
+| `scripts/vpn_connectivity_check.py` | Simple post-build ICMP tunnel connectivity check |
+| `examples/fortigate_ipsec_cli.conf` | Conceptual FortiGate CLI example |
+| `examples/paloalto_ipsec_set_commands.txt` | Conceptual Palo Alto set-command example |
+| `tests/test_vpn_planner.py` | Tests for the Part 2 plan builder |
+
+### Part 2 VPN Parameters
+
+The default plan uses these values:
+
+| Parameter | Value |
+| --- | --- |
+| FortiGate WAN IP | `198.51.100.10` |
+| Palo Alto WAN IP | `203.0.113.20` |
+| FortiGate local network | `10.10.10.0/24` |
+| Palo Alto local network | `10.20.20.0/24` |
+| Tunnel network | `169.255.1.0/30` |
+| FortiGate tunnel IP | `169.255.1.1/30` |
+| Palo Alto tunnel IP | `169.255.1.2/30` |
+| IKE version | IKEv2 |
+| Phase 1 proposal | AES-256, SHA-256, DH Group 14, lifetime 28800 |
+| Phase 2 proposal | AES-256, SHA-256, PFS Group 14, lifetime 3600 |
+
+The traffic selectors are mirrored:
+
+| Device | Local Selector | Remote Selector |
+| --- | --- | --- |
+| FortiGate | `10.10.10.0/24` | `10.20.20.0/24` |
+| Palo Alto | `10.20.20.0/24` | `10.10.10.0/24` |
+
+### Part 2 Tools and APIs
+
+Possible automation interfaces:
+
+- FortiGate FortiOS REST API for Phase 1, Phase 2, interfaces, address objects, firewall policies, and static routes.
+- Palo Alto PAN-OS REST API for address objects, tunnel interfaces, IKE gateways, IPSec tunnels, routes, and security policy.
+- PAN-OS XML API or Panorama for commit and operational commands.
+- SSH with Netmiko or Paramiko for CLI fallback and validation commands.
+- A centralized tool such as Panorama, FortiManager, Ansible, or a CI runner for controlled execution.
+
+### Part 2 Automation Steps
+
+The automation workflow should:
+
+1. Validate all input parameters, networks, tunnel IPs, and secret references.
+2. Create address objects for local and remote protected networks on both firewalls.
+3. Configure FortiGate and Palo Alto tunnel interfaces with `169.255.1.1/30` and `169.255.1.2/30`.
+4. Configure compatible Phase 1/IKE settings on both sides.
+5. Configure compatible Phase 2/IPSec settings and mirrored Proxy-ID/traffic selectors.
+6. Add static routes for the opposite protected subnet through the tunnel.
+7. Create firewall policies allowing VPN traffic in the required direction.
+8. Commit or apply the configuration, including a PAN-OS commit.
+9. Validate configuration state and operational tunnel state.
+10. Generate alerts for failed validation checks.
+
+### Part 2 Vendor Considerations
+
+Important multi-vendor risks:
+
+- FortiGate traffic selectors and Palo Alto Proxy-IDs must be mirrored exactly.
+- IKE version, Phase 1 proposal, Phase 2 proposal, PFS, and lifetimes must match.
+- PAN-OS uses a candidate configuration and requires commit before changes are active.
+- FortiGate and Palo Alto use different zone, route, interface, and policy models.
+- Pre-shared keys should come from a secret manager and must not be committed to Git.
+- NAT-T, route priority, and security policy logging should be aligned with the real network design.
+
+### Part 2 Validation and Alerts
+
+Validation should check both configuration and live tunnel state:
+
+- FortiGate: `get vpn ipsec tunnel summary`, `diagnose vpn tunnel list`, route lookup, policy checks, FortiOS monitor API.
+- Palo Alto: `show vpn ike-sa`, `show vpn ipsec-sa`, route lookup, system logs, PAN-OS operational API.
+- End-to-end: ICMP or application test traffic between protected networks.
+
+Alert examples:
+
+- `VPN_DOWN`: IKE or IPSec SA is not established.
+- `PROXY_ID_MISMATCH`: FortiGate selectors and Palo Alto Proxy-ID are not mirrored.
+- `PROPOSAL_MISMATCH`: Phase 1 or Phase 2 settings differ.
+- `ROUTE_MISSING`: Remote protected subnet is not routed through the tunnel.
+- `POLICY_MISSING`: Security policy does not allow VPN traffic.
+- `COMMIT_PENDING`: PAN-OS candidate configuration has not been committed.
+
+### Generate the Part 2 JSON Plan
+
+Run:
+
+```bash
+source .venv/bin/activate
+python scripts/generate_vpn_plan.py
+```
+
+Override default parameters when needed:
+
+```bash
+python scripts/generate_vpn_plan.py \
+  --fortigate-wan-ip 198.51.100.10 \
+  --paloalto-wan-ip 203.0.113.20 \
+  --fortigate-lan 10.10.10.0/24 \
+  --paloalto-lan 10.20.20.0/24
+```
+
+The script prints a JSON object containing parameters, API/tool options, FortiGate steps, Palo Alto steps, validation checks, alert conditions, and vendor considerations.
 
 ## Safety
 

@@ -17,6 +17,7 @@ DEFAULT_VLANS: Dict[int, str] = {
 DEFAULT_HOSTNAME = "AUTOMATED_SWITCH"
 NETMIKO_CONN_TIMEOUT = 15
 NETMIKO_READ_TIMEOUT = 60
+NETMIKO_PROMPT_PATTERN = r"[>#]"
 
 
 class BaseSwitchDriver(ABC):
@@ -158,7 +159,15 @@ class NetmikoSwitchDriver(BaseSwitchDriver):
         return self._send_config(commands)
 
     def push_hostname(self, hostname: str) -> str:
-        return self._send_config([f"hostname {hostname}"])
+        self._require_connection()
+        output = self.connection.send_config_set(
+            [f"hostname {hostname}"],
+            cmd_verify=False,
+            read_timeout=NETMIKO_READ_TIMEOUT,
+            terminator=NETMIKO_PROMPT_PATTERN,
+        )
+        self.connection.set_base_prompt(pattern=NETMIKO_PROMPT_PATTERN)
+        return output
 
     def save_config(self) -> str:
         return self._send_command("write memory")
@@ -174,11 +183,20 @@ class NetmikoSwitchDriver(BaseSwitchDriver):
 
     def _send_config(self, commands: list[str]) -> str:
         self._require_connection()
-        return self.connection.send_config_set(commands, read_timeout=NETMIKO_READ_TIMEOUT)
+        return self.connection.send_config_set(
+            commands,
+            read_timeout=NETMIKO_READ_TIMEOUT,
+            terminator=NETMIKO_PROMPT_PATTERN,
+        )
 
     def _send_command(self, command: str) -> str:
         self._require_connection()
-        return self.connection.send_command(command, read_timeout=NETMIKO_READ_TIMEOUT)
+        return self.connection.send_command(
+            command,
+            read_timeout=NETMIKO_READ_TIMEOUT,
+            expect_string=NETMIKO_PROMPT_PATTERN,
+            auto_find_prompt=False,
+        )
 
     def _require_connection(self) -> None:
         if self.connection is None:

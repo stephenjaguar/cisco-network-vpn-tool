@@ -38,6 +38,7 @@ class FakeNetmikoConnection:
     def __init__(self):
         self.config_calls = []
         self.command_calls = []
+        self.base_prompt_calls = []
 
     def send_config_set(self, commands, **kwargs):
         self.config_calls.append((commands, kwargs))
@@ -46,6 +47,10 @@ class FakeNetmikoConnection:
     def send_command(self, command, **kwargs):
         self.command_calls.append((command, kwargs))
         return "command output"
+
+    def set_base_prompt(self, **kwargs):
+        self.base_prompt_calls.append(kwargs)
+        return DEFAULT_HOSTNAME
 
 
 def test_netmiko_commands_use_one_minute_read_timeout():
@@ -57,11 +62,30 @@ def test_netmiko_commands_use_one_minute_read_timeout():
     assert driver.get_running_config() == "command output"
 
     assert connection.config_calls == [
-        (["vlan 10", "name VLAN_DATA"], {"read_timeout": 60})
+        (["vlan 10", "name VLAN_DATA"], {"read_timeout": 60, "terminator": r"[>#]"})
     ]
     assert connection.command_calls == [
-        ("show running-config", {"read_timeout": 60})
+        (
+            "show running-config",
+            {"read_timeout": 60, "expect_string": r"[>#]", "auto_find_prompt": False},
+        )
     ]
+
+
+def test_netmiko_hostname_change_uses_generic_prompt_and_refreshes_base_prompt():
+    driver = NetmikoSwitchDriver("192.0.2.10", "admin", "admin")
+    connection = FakeNetmikoConnection()
+    driver.connection = connection
+
+    assert driver.push_hostname("AUTOMAT") == "config output"
+
+    assert connection.config_calls == [
+        (
+            ["hostname AUTOMAT"],
+            {"cmd_verify": False, "read_timeout": 60, "terminator": r"[>#]"},
+        )
+    ]
+    assert connection.base_prompt_calls == [{"pattern": r"[>#]"}]
 
 
 def test_netmiko_connect_uses_fifteen_second_connection_timeouts(monkeypatch):
